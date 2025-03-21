@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpClient();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

@@ -2,31 +2,36 @@ using FitnessAppBackend.Data.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace FitnessAppBackend.Data.Data;
-
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser>(options)
+namespace FitnessAppBackend.Data.Data
 {
-    public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
-    public DbSet<Exercise> Exercises { get; set; }
-    public DbSet<Avatar> Avatars { get; set; }
-    public DbSet<HealthAdvice> HealthAdvice { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder builder)
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        base.OnModelCreating(builder);
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
 
-        // Configure relationships
-        builder.Entity<WorkoutPlan>()
-            .HasOne(w => w.User)
-            .WithMany(u => u.WorkoutPlans)
-            .HasForeignKey(w => w.UserId);
+        public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
+        public DbSet<Exercise> Exercises { get; set; }
+        public DbSet<Avatar> Avatars { get; set; }
+        public DbSet<HealthAdvice> HealthAdvice { get; set; }
 
-        // Add indexes
-        builder.Entity<WorkoutPlan>()
-            .HasIndex(w => w.UserId);
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
 
-        builder.Entity<HealthAdvice>()
-            .HasIndex(h => h.Category);
+            // Configure relationships
+            builder.Entity<WorkoutPlan>()
+                .HasOne(w => w.User)
+                .WithMany(u => u.WorkoutPlans)
+                .HasForeignKey(w => w.UserId);
+
+            // Add indexes
+            builder.Entity<WorkoutPlan>()
+                .HasIndex(w => w.UserId);
+
+            builder.Entity<HealthAdvice>()
+                .HasIndex(h => h.Category);
+        }
     }
 }
