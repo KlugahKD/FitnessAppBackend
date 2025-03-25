@@ -1,20 +1,49 @@
+using FitnessAppBackend.Business.Common;
+using FitnessAppBackend.Business.DTO;
+using FitnessAppBackend.Business.Helper;
 using FitnessAppBackend.Data.Data;
 using FitnessAppBackend.Data.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FitnessAppBackend.Business.Services;
 
-public class WorkoutService(ApplicationDbContext context) : IWorkoutService
+public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService> logger) : IWorkoutService
 {
-    public async Task<WorkoutPlan> CreateWorkoutPlanAsync(string userId, WorkoutPlan plan)
+    public async Task<ServiceResponse<WorkoutPlan>> CreateWorkoutPlanAsync(string userId, WorkoutPlanRequest plan)
     {
-        plan.UserId = userId;
-        plan.CreatedAt = DateTime.UtcNow;
-        plan.UpdatedAt = DateTime.UtcNow;
+        try
+        {
+            logger.LogInformation("Creating workout plan");
+            
+            var userExists = await context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                logger.LogDebug("User not found");
+                
+                return ResponseHelper.NotFoundResponse<WorkoutPlan>("User not found");
+            }
 
-        context.WorkoutPlans.Add(plan);
-        await context.SaveChangesAsync();
-        return plan;
+            var workoutPlan = new WorkoutPlan()
+            {
+                Id = new Random().Next(1, 1000000),
+                UserId = userId,
+                Description = plan.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            context.WorkoutPlans.Add(workoutPlan);
+            await context.SaveChangesAsync();
+            return ResponseHelper.OkResponse(workoutPlan.Adapt<WorkoutPlan>());
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error creating workout plan");
+            
+            return ResponseHelper.InternalServerErrorResponse<WorkoutPlan>("Error creating workout plan");
+        }
     }
 
     public async Task<WorkoutPlan?> GetWorkoutPlanAsync(int planId, string userId)

@@ -1,3 +1,4 @@
+using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Business.DTO;
 using FitnessAppBackend.Data.Models;
 
@@ -5,7 +6,7 @@ namespace FitnessAppBackend.Business.Services;
 
 public interface IAuthService
 {
-    Task<AuthResponse> RegisterAsync(RegisterModel model);
-    Task<AuthResponse> LoginAsync(LoginModel model);
+    Task<ServiceResponse<AuthResponse>> RegisterAsync(RegisterModel model);
+    Task<ServiceResponse<AuthResponse>> LoginAsync(LoginModel model);
     string GenerateJwtToken(ApplicationUser user);
 }

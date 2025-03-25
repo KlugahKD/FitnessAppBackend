@@ -1,75 +1,108 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Business.DTO;
+using FitnessAppBackend.Business.Helper;
 using FitnessAppBackend.Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FitnessAppBackend.Business.Services;
 
-public class AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+public class AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, ILogger<AuthService> logger)
     : IAuthService
 {
-    public async Task<AuthResponse> RegisterAsync(RegisterModel model)
+    public async Task<ServiceResponse<AuthResponse>> RegisterAsync(RegisterModel model)
     {
-        var userExists = await userManager.FindByEmailAsync(model.Email);
-        if (userExists != null)
+        try
         {
-            throw new InvalidOperationException("User already exists!");
-        }
-
-        var user = new ApplicationUser
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            DateOfBirth = model.DateOfBirth,
-            FitnessGoals = model.FitnessGoals
-        };
-
-        var result = await userManager.CreateAsync(user, model.Password);
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            logger.LogInformation("Registering user");
             
-            throw new InvalidOperationException($"Failed to create user: {errors}");
-        }
+            var userExists = await userManager.FindByEmailAsync(model.Email);
+            if (userExists != null)
+            {
+                logger.LogDebug("User already exists");
+                return ResponseHelper.BadRequestResponse<AuthResponse>("User already exists");
+            }
 
-        return new AuthResponse
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                DateOfBirth = model.DateOfBirth,
+                FitnessGoals = model.FitnessGoals
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                logger.LogDebug("Failed to create user");
+                
+               return ResponseHelper.FailedDependencyResponse<AuthResponse>("Failed to create user");
+            }
+
+            var response = new AuthResponse
+            {
+                Email = user.Email,
+                UserId = user.Id,
+                FirstName = user.FirstName, 
+                LastName = user.LastName
+            };
+            
+            return ResponseHelper.OkResponse(response);
+        }
+        catch (Exception e)
         {
-            Token = GenerateJwtToken(user),
-            Email = user.Email!,
-            UserId = user.Id,
-            FirstName = user.FirstName ?? string.Empty,
-            LastName = user.LastName ?? string.Empty
-        };
+            logger.LogError(e, "Error registering user");
+
+            return ResponseHelper.InternalServerErrorResponse<AuthResponse>("Something went wrong");
+        }
     }
 
-    public async Task<AuthResponse> LoginAsync(LoginModel model)
+    public async Task<ServiceResponse<AuthResponse>> LoginAsync(LoginModel model)
     {
-        var user = await userManager.FindByEmailAsync(model.Email);
-        if (user == null)
+        try
         {
-            throw new InvalidOperationException("User not found");
-        }
+            logger.LogInformation("Logging in user");
+            
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                logger.LogDebug("User not found");
+                
+                return ResponseHelper.BadRequestResponse<AuthResponse>("Invalid login credentials");
+            }
 
-        var isPasswordValid = await userManager.CheckPasswordAsync(user, model.Password);
-        if (!isPasswordValid)
-        {
-            throw new InvalidOperationException("Invalid password");
-        }
+            var isPasswordValid = await userManager.CheckPasswordAsync(user, model.Password);
+            if (!isPasswordValid)
+            {
+               logger.LogDebug("Invalid password");
+               
+                return ResponseHelper.BadRequestResponse<AuthResponse>("Invalid login credentials");
+            }
 
-        return new AuthResponse
+            var response = new AuthResponse
+            {
+                Token = GenerateJwtToken(user),
+                Email = user.Email ?? string.Empty,
+                UserId = user.Id,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty
+            };
+            
+            return ResponseHelper.OkResponse(response);
+        }
+        catch (Exception e)
         {
-            Token = GenerateJwtToken(user),
-            Email = user.Email!,
-            UserId = user.Id,
-            FirstName = user.FirstName ?? string.Empty,
-            LastName = user.LastName ?? string.Empty
-        };
+           logger.LogError(e, "Error logging in user");
+           
+            return ResponseHelper.InternalServerErrorResponse<AuthResponse>("Something went wrong");
+        }
     }
 
     public string GenerateJwtToken(ApplicationUser user)

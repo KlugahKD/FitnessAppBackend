@@ -1,5 +1,6 @@
 using FitnessAppBackend.Business.DTO;
 using FitnessAppBackend.Business.Services;
+using FitnessAppBackend.Helper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAppBackend.Controllers;
@@ -9,30 +10,18 @@ namespace FitnessAppBackend.Controllers;
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterModel model)
+    public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        try
-        {
-            var response = await authService.RegisterAsync(model);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
+        var response = await authService.RegisterAsync(model);
+        
+        return ActionResultHelper.ToActionResult(response);
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(LoginModel model)
+    public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        try
-        {
-            var response = await authService.LoginAsync(model);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
+        var response = await authService.LoginAsync(model);
+        
+        return ActionResultHelper.ToActionResult(response);
     }
 }

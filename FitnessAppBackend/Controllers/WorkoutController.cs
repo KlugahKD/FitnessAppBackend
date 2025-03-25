@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FitnessAppBackend.Business.DTO;
 using FitnessAppBackend.Business.Services;
 using FitnessAppBackend.Data.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,7 @@ namespace FitnessAppBackend.Controllers;
 public class WorkoutController(IWorkoutService workoutService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<WorkoutPlan>> CreateWorkoutPlan(WorkoutPlan plan)
+    public async Task<ActionResult<WorkoutPlan>> CreateWorkoutPlan(WorkoutPlanRequest plan)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();

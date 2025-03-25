@@ -25,6 +25,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 // Add Services
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 builder.Services.AddScoped<IAvatarService, AvatarService>();
@@ -45,7 +46,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapScalarApiReference(options =>
     {
-        options.Title = "PlayPrecision API";
+        options.Title = "FitnessAppBackend";
         options.Theme = ScalarTheme.Purple;
         options.DefaultHttpClient = new(ScalarTarget.CSharp, ScalarClient.HttpClient);
         options.ShowSidebar = true;

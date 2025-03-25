@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "fFqlBPNPaZY=",
+  "dgSpecHash": "BxIRtI/0Co0=",
   "success": true,
   "projectFilePath": "C:\\Users\\Klugah Daniel Kojo\\RiderProjects\\FitnessAppBackend\\FitnessAppBackend.Business\\FitnessAppBackend.Business.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\entityframework\\6.1.0\\entityframework.6.1.0.nupkg.sha512",
+    "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\mapster\\7.4.0\\mapster.7.4.0.nupkg.sha512",
+    "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\mapster.core\\1.2.1\\mapster.core.1.2.1.nupkg.sha512",
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\microsoft.aspnet.identity.core\\2.2.4\\microsoft.aspnet.identity.core.2.2.4.nupkg.sha512",
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\microsoft.aspnet.identity.entityframework\\2.2.4\\microsoft.aspnet.identity.entityframework.2.2.4.nupkg.sha512",
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\9.0.3\\microsoft.aspnetcore.cryptography.internal.9.0.3.nupkg.sha512",
