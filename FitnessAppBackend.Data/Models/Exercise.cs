@@ -11,4 +11,5 @@ public class Exercise
     public string Category { get; set; } = string.Empty;
     public bool RequiresEquipment { get; set; }
     public bool IsIndoor { get; set; }
+    public string UserId { get; set; }
 }

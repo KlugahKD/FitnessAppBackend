@@ -7,8 +7,8 @@ namespace FitnessAppBackend.Business.Services;
 public interface IWorkoutService
 {
     Task<ServiceResponse<WorkoutPlan>> CreateWorkoutPlanAsync(string userId, WorkoutPlanRequest plan);
-    Task<WorkoutPlan?> GetWorkoutPlanAsync(int planId, string userId);
-    Task<IEnumerable<WorkoutPlan>> GetUserWorkoutPlansAsync(string userId);
-    Task<WorkoutPlan> UpdateWorkoutPlanAsync(WorkoutPlan plan);
-    Task DeleteWorkoutPlanAsync(int planId, string userId);
+    Task<ServiceResponse<WorkoutPlan>> GetWorkoutPlanAsync(int planId, string userId);
+    Task<ServiceResponse<PagedResult<WorkoutPlan>>> GetUserWorkoutPlansAsync(string userId, BaseFilter filter);
+    Task<ServiceResponse<WorkoutPlan>> UpdateWorkoutPlanAsync(int planId,  WorkoutPlanRequest updateRequest);
+    Task<ServiceResponse<bool>> DeleteWorkoutPlanAsync(int planId, string userId);
 }

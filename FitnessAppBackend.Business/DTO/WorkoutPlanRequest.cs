@@ -3,5 +3,19 @@ namespace FitnessAppBackend.Business.DTO;
 public class WorkoutPlanRequest
 {
     public string UserId { get; set; }
-    public string Description { get; set; }
+    
+    public WorkoutPlanType PlanType { get; set; } 
+}
+
+public enum WorkoutPlanType
+{
+    LoseWeight,
+    GainMuscle,
+    ImproveEndurance,
+    IncreaseFlexibility,
+    BuildStrength,
+    CardioFitness,
+    ToneBody,
+    ImproveBalance,
+    IncreaseStamina
 }
