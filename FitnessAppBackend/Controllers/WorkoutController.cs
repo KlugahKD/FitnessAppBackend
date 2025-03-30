@@ -34,7 +34,7 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     /// <param name="id">The ID of the workout plan.</param>
     /// <returns>The workout plan.</returns>
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetWorkoutPlan(int id)
+    public async Task<IActionResult> GetWorkoutPlan(string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();
@@ -64,7 +64,7 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     /// <param name="plan">The updated workout plan details.</param>
     /// <returns>The updated workout plan.</returns>
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateWorkoutPlan(int id, WorkoutPlanRequest plan)
+    public async Task<IActionResult> UpdateWorkoutPlan(string id, WorkoutPlanRequest plan)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null || userId != plan.UserId) return Unauthorized();
@@ -79,7 +79,7 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     /// <param name="id">The ID of the workout plan to delete.</param>
     /// <returns>No content if the deletion was successful.</returns>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteWorkoutPlan(int id)
+    public async Task<IActionResult> DeleteWorkoutPlan(string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();

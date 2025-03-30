@@ -2,7 +2,7 @@ namespace FitnessAppBackend.Data.Models;
 
 public class WorkoutPlan
 {
-    public int Id { get; set; }
+    public string Id { get; set; }
     public string UserId { get; set; } = string.Empty;
     public virtual ApplicationUser User { get; set; } = null!;
     public string Name{ get; set; } = string.Empty;

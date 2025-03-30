@@ -17,8 +17,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         {
             logger.LogInformation("Creating workout plan");
 
-            var userExists = await context.Users.AnyAsync(u => u.Id == userId);
-            if (!userExists)
+            if (!await UserExistsAsync(userId)) 
             {
                 logger.LogDebug("User not found");
 
@@ -37,7 +36,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             
             var workoutPlan = new WorkoutPlan()
             {
-                Id = new Random().Next(1, 1000000),
+                Id = Guid.NewGuid().ToString("N"),
                 UserId = userId,
                 Description = plan.PlanType.ToString(),
                 CreatedAt = DateTime.UtcNow,
@@ -57,18 +56,19 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
     }
 
-    public async Task<ServiceResponse<WorkoutPlan>> GetWorkoutPlanAsync(int planId, string userId)
+    public async Task<ServiceResponse<WorkoutPlan>> GetWorkoutPlanAsync(string planId, string userId)
     {
         try
         {
             logger.LogInformation("Fetching workout plan with ID: {PlanId}", planId);
-            var userExists = await context.Users.AnyAsync(u => u.Id == userId);
-            if (!userExists)
+            
+            if (!await UserExistsAsync(userId)) 
             {
                 logger.LogDebug("User not found");
 
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("User not found");
             }
+
 
             var planExists = await context.WorkoutPlans.AnyAsync(p => p.Id == planId && p.UserId == userId);
             if (!planExists)
@@ -101,8 +101,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         {
             logger.LogInformation("Fetching all workout plans for user: {UserId}", userId);
             
-            var userExists = await context.Users.AnyAsync(u => u.Id == userId);
-            if (!userExists)
+            if (!await UserExistsAsync(userId)) 
             {
                 logger.LogDebug("User not found");
 
@@ -151,7 +150,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
     }
 
-    public async Task<ServiceResponse<WorkoutPlan>> UpdateWorkoutPlanAsync(int planId, WorkoutPlanRequest updateRequest)
+    public async Task<ServiceResponse<WorkoutPlan>> UpdateWorkoutPlanAsync(string planId, WorkoutPlanRequest updateRequest)
     {
         try
         {
@@ -165,8 +164,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("Workout plan not found");
             }
             
-            var userExists = await context.Users.AnyAsync(u => u.Id == updateRequest.UserId);
-            if (!userExists)
+            if (!await UserExistsAsync(updateRequest.UserId)) 
             {
                 logger.LogDebug("User not found");
 
@@ -205,16 +203,16 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
     }
 
-    public async Task<ServiceResponse<bool>> DeleteWorkoutPlanAsync(int planId, string userId)
+    public async Task<ServiceResponse<bool>> DeleteWorkoutPlanAsync(string planId, string userId)
     {
         try
         {
             logger.LogInformation("Deleting workout plan with ID: {PlanId}", planId);
-            var userExists = await context.Users.AnyAsync(u => u.Id == userId);
-            if (!userExists)
+            
+            if (!await UserExistsAsync(userId)) 
             {
                 logger.LogDebug("User not found");
-
+                
                 return ResponseHelper.NotFoundResponse<bool>("User not found");
             }
             
@@ -294,5 +292,10 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
 
         return exercises;
+    }
+    
+    private async Task<bool> UserExistsAsync(string userId)
+    {
+        return await context.Users.AnyAsync(u => u.Id == userId);
     }
 }
