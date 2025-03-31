@@ -1,51 +1,56 @@
 using System.Security.Claims;
+using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Business.Services;
-using FitnessAppBackend.Data.Models;
+using FitnessAppBackend.Helper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAppBackend.Controllers;
 
+/// <summary>
+/// Controller for handling avatar-related actions.
+/// </summary>
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AvatarController(IAvatarService avatarService) : ControllerBase
 {
+    /// <summary>
+    /// Retrieves a paginated list of available avatars.
+    /// </summary>
+    /// <param name="filter">The filter parameters for pagination.</param>
+    /// <returns>A paginated list of avatars.</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Avatar>>> GetAvailableAvatars()
+    public async Task<IActionResult> GetAvailableAvatars([FromQuery] BaseFilter filter)
     {
-        var avatars = await avatarService.GetAvailableAvatarsAsync();
-        return Ok(avatars);
+        var response = await avatarService.GetAvailableAvatarsAsync(filter);
+        return ActionResultHelper.ToActionResult(response);
     }
 
+    /// <summary>
+    /// Retrieves a specific avatar by ID.
+    /// </summary>
+    /// <param name="id">The ID of the avatar.</param>
+    /// <returns>The avatar details.</returns>
     [HttpGet("{id}")]
-    public async Task<ActionResult<Avatar>> GetAvatar(int id)
+    public async Task<IActionResult> GetAvatarById(string id)
     {
-        try
-        {
-            var avatar = await avatarService.GetAvatarByIdAsync(id);
-            return Ok(avatar);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        var response = await avatarService.GetAvatarByIdAsync(id);
+        return ActionResultHelper.ToActionResult(response);
     }
 
-    [HttpPost("assign/{avatarId}")]
-    public async Task<ActionResult<Avatar>> AssignAvatar(int avatarId)
+    /// <summary>
+    /// Assigns an avatar to the authenticated user.
+    /// </summary>
+    /// <param name="avatarId">The ID of the avatar to assign.</param>
+    /// <returns>A boolean indicating the result of the assignment.</returns>
+    [HttpPost("assign")]
+    public async Task<IActionResult> AssignAvatarToUser([FromBody] string avatarId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();
 
-        try
-        {
-            var avatar = await avatarService.AssignAvatarToUserAsync(userId, avatarId);
-            return Ok(avatar);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        var response = await avatarService.AssignAvatarToUserAsync(userId, avatarId);
+        return ActionResultHelper.ToActionResult(response);
     }
 }
