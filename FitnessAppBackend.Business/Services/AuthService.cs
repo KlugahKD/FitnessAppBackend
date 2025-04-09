@@ -35,7 +35,9 @@ public class AuthService(UserManager<ApplicationUser> userManager, IConfiguratio
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 DateOfBirth = model.DateOfBirth,
-                FitnessGoals = model.FitnessGoals
+                FitnessGoals = model.FitnessGoals,
+                HowOftenWorkOut = model.HowOftenWorkOut,
+                PreferredAvatar = model.AvatarChoice
             };
 
             var result = await userManager.CreateAsync(user, model.Password);

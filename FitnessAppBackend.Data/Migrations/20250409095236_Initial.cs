@@ -35,6 +35,7 @@ namespace FitnessAppBackend.Data.Migrations
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FitnessGoals = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PreferredAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    HowOftenWorkOut = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -59,13 +60,10 @@ namespace FitnessAppBackend.Data.Migrations
                 name: "Avatars",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Specialization = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    VoiceType = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Specialization = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -195,11 +193,32 @@ namespace FitnessAppBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ExerciseLogs",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ExerciseName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DurationMinutes = table.Column<int>(type: "int", nullable: false),
+                    CaloriesBurned = table.Column<int>(type: "int", nullable: false),
+                    LoggedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExerciseLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExerciseLogs_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WorkoutPlans",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -231,7 +250,8 @@ namespace FitnessAppBackend.Data.Migrations
                     Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RequiresEquipment = table.Column<bool>(type: "bit", nullable: false),
                     IsIndoor = table.Column<bool>(type: "bit", nullable: false),
-                    WorkoutPlanId = table.Column<int>(type: "int", nullable: true)
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WorkoutPlanId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -283,6 +303,11 @@ namespace FitnessAppBackend.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ExerciseLogs_UserId",
+                table: "ExerciseLogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Exercises_WorkoutPlanId",
                 table: "Exercises",
                 column: "WorkoutPlanId");
@@ -318,6 +343,9 @@ namespace FitnessAppBackend.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Avatars");
+
+            migrationBuilder.DropTable(
+                name: "ExerciseLogs");
 
             migrationBuilder.DropTable(
                 name: "Exercises");

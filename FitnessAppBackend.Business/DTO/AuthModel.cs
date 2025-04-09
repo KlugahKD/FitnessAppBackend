@@ -9,6 +9,10 @@ public class RegisterModel
     public string LastName { get; set; } = string.Empty;
     public DateTime DateOfBirth { get; set; }
     public string? FitnessGoals { get; set; }
+    
+    public string? HowOftenWorkOut { get; set; }
+    
+    public string? AvatarChoice { get; set; } 
 }
 
 public class LoginModel

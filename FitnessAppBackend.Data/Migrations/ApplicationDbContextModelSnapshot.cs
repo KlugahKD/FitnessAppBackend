@@ -50,6 +50,9 @@ namespace FitnessAppBackend.Data.Migrations
                     b.Property<string>("FitnessGoals")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HowOftenWorkOut")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
@@ -104,17 +107,10 @@ namespace FitnessAppBackend.Data.Migrations
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.Avatar", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -123,10 +119,6 @@ namespace FitnessAppBackend.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Specialization")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VoiceType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -168,18 +160,51 @@ namespace FitnessAppBackend.Data.Migrations
                     b.Property<bool>("RequiresEquipment")
                         .HasColumnType("bit");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("VideoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("WorkoutPlanId")
-                        .HasColumnType("int");
+                    b.Property<string>("WorkoutPlanId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("WorkoutPlanId");
 
                     b.ToTable("Exercises");
+                });
+
+            modelBuilder.Entity("FitnessAppBackend.Data.Models.ExerciseLog", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CaloriesBurned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExerciseName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LoggedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ExerciseLogs");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.HealthAdvice", b =>
@@ -214,11 +239,8 @@ namespace FitnessAppBackend.Data.Migrations
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.WorkoutPlan", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -383,6 +405,17 @@ namespace FitnessAppBackend.Data.Migrations
                     b.HasOne("FitnessAppBackend.Data.Models.WorkoutPlan", null)
                         .WithMany("Exercises")
                         .HasForeignKey("WorkoutPlanId");
+                });
+
+            modelBuilder.Entity("FitnessAppBackend.Data.Models.ExerciseLog", b =>
+                {
+                    b.HasOne("FitnessAppBackend.Data.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.WorkoutPlan", b =>

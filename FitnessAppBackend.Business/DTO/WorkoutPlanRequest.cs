@@ -12,10 +12,5 @@ public enum WorkoutPlanType
     LoseWeight,
     GainMuscle,
     ImproveEndurance,
-    IncreaseFlexibility,
-    BuildStrength,
-    CardioFitness,
-    ToneBody,
-    ImproveBalance,
-    IncreaseStamina
+    IncreaseFlexibility
 }

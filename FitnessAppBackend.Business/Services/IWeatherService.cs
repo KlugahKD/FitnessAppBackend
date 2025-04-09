@@ -1,9 +1,8 @@
-using FitnessAppBackend.Data.Models;
+using FitnessAppBackend.Business.DTO;
 
 namespace FitnessAppBackend.Business.Services;
 
 public interface IWeatherService
 {
-    Task<WeatherData> GetCurrentWeatherAsync(string location);
-    Task<IEnumerable<string>> GetWorkoutSuggestionsAsync(WeatherData weatherData);
+    Task<SimplifiedWeatherData?> GetCurrentWeatherAsync(string city);
 }

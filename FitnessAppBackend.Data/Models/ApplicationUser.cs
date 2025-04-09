@@ -9,5 +9,6 @@ public class ApplicationUser : IdentityUser
     public DateTime DateOfBirth { get; set; }
     public string? FitnessGoals { get; set; }
     public string? PreferredAvatar { get; set; }
+    public string? HowOftenWorkOut { get; set; }
     public virtual ICollection<WorkoutPlan> WorkoutPlans { get; set; } = new List<WorkoutPlan>();
 }

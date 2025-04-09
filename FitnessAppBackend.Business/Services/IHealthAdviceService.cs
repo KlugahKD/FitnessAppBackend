@@ -1,10 +1,9 @@
+using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Data.Models;
 
 namespace FitnessAppBackend.Business.Services;
 
 public interface IHealthAdviceService
 {
-    Task<IEnumerable<HealthAdvice>> GetPersonalizedAdviceAsync(string userId);
-    Task<HealthAdvice> AddHealthAdviceAsync(HealthAdvice advice);
-    Task<IEnumerable<HealthAdvice>> GetDailyTipsAsync();
+    Task<ServiceResponse<IEnumerable<HealthAdvice>>> GetPersonalisedHealthAdvice(string userId);
 }

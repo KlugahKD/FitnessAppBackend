@@ -2,14 +2,11 @@ namespace FitnessAppBackend.Data.Models;
 
 public class Exercise
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string VideoUrl { get; set; } = string.Empty;
+    public string Id { get; set; }
+    public string Name { get; set; }
     public int DurationMinutes { get; set; }
-    public string Difficulty { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
-    public bool RequiresEquipment { get; set; }
-    public bool IsIndoor { get; set; }
+    public bool IsStarted { get; set; } 
+    public bool IsCompleted { get; set; } 
     public string UserId { get; set; }
+    public List<Step> Steps { get; set; } 
 }

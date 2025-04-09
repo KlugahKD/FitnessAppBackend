@@ -19,27 +19,12 @@ public class HealthAdviceController(IHealthAdviceService healthAdviceService) : 
 
         try
         {
-            var advice = await healthAdviceService.GetPersonalizedAdviceAsync(userId);
+            var advice = await healthAdviceService.GetPersonalisedHealthAdvice(userId);
             return Ok(advice);
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
         }
-    }
-
-    [HttpGet("daily-tips")]
-    public async Task<ActionResult<IEnumerable<HealthAdvice>>> GetDailyTips()
-    {
-        var tips = await healthAdviceService.GetDailyTipsAsync();
-        return Ok(tips);
-    }
-
-    [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<HealthAdvice>> AddHealthAdvice(HealthAdvice advice)
-    {
-        var newAdvice = await healthAdviceService.AddHealthAdviceAsync(advice);
-        return CreatedAtAction(nameof(GetDailyTips), null, newAdvice);
     }
 }

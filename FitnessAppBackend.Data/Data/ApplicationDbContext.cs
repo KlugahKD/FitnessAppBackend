@@ -12,6 +12,8 @@ namespace FitnessAppBackend.Data.Data
         public DbSet<Avatar> Avatars { get; set; }
         public DbSet<HealthAdvice> HealthAdvice { get; set; }
         public DbSet<ExerciseLog> ExerciseLogs { get; set; }
+        
+        public DbSet<Step> Steps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

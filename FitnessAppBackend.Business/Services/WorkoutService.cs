@@ -9,15 +9,15 @@ using Microsoft.Extensions.Logging;
 
 namespace FitnessAppBackend.Business.Services;
 
-public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService> logger) : IWorkoutService
+public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService> logger,  IWeatherService weatherService) : IWorkoutService
 {
-    public async Task<ServiceResponse<WorkoutPlan>> CreateWorkoutPlanAsync(string userId, WorkoutPlanRequest plan)
+    public async Task<ServiceResponse<WorkoutPlan>> CreateWorkoutPlanAsync(WorkoutPlanRequest plan)
     {
         try
         {
             logger.LogInformation("Creating workout plan");
 
-            if (!await UserExistsAsync(userId)) 
+            if (!await UserExistsAsync(plan.UserId))
             {
                 logger.LogDebug("User not found");
 
@@ -26,22 +26,24 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
             var planExists =
                 await context.WorkoutPlans.AnyAsync(
-                    p => p.UserId == userId && p.Description == plan.PlanType.ToString());
+                    p => p.UserId == plan.UserId && p.Description == plan.PlanType.ToString());
             if (planExists)
             {
                 logger.LogDebug("Workout plan already exists");
 
                 return ResponseHelper.BadRequestResponse<WorkoutPlan>("Workout plan already exists");
             }
-            
+
+            var exercises = await GenerateExercisesAsync(plan);
+
             var workoutPlan = new WorkoutPlan()
             {
                 Id = Guid.NewGuid().ToString("N"),
-                UserId = userId,
+                UserId = plan.UserId,
                 Description = plan.PlanType.ToString(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                Exercises = GenerateExercises(plan)
+                Exercises = exercises
             };
 
             context.WorkoutPlans.Add(workoutPlan);
@@ -56,106 +58,87 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
     }
 
-    public async Task<ServiceResponse<WorkoutPlan>> GetWorkoutPlanAsync(string planId, string userId)
+    public async Task<ServiceResponse<PagedResult<Exercise>>> GetPaginatedExercisesAsync(string userId,
+        BaseFilter filter)
     {
         try
         {
-            logger.LogInformation("Fetching workout plan with ID: {PlanId}", planId);
-            
-            if (!await UserExistsAsync(userId)) 
+            logger.LogInformation("Fetching paginated exercises for user: {UserId}", userId);
+
+            if (!await UserExistsAsync(userId))
             {
                 logger.LogDebug("User not found");
-
-                return ResponseHelper.NotFoundResponse<WorkoutPlan>("User not found");
+                return ResponseHelper.NotFoundResponse<PagedResult<Exercise>>("User not found");
             }
 
+            var exercisesQuery = context.Exercises
+                .Where(e => e.UserId == userId)
+                .AsNoTracking();
 
-            var planExists = await context.WorkoutPlans.AnyAsync(p => p.Id == planId && p.UserId == userId);
-            if (!planExists)
-            {
-                logger.LogDebug("Workout plan not found");
+            var totalCount = await exercisesQuery.CountAsync();
 
-                return ResponseHelper.NotFoundResponse<WorkoutPlan>("Workout plan not found");
-            }
-
-            var plan = await context.WorkoutPlans
-                .Include(p => p.Exercises)
-                .FirstOrDefaultAsync(p => p.Id == planId && p.UserId == userId);
-
-            if (plan != null) return ResponseHelper.OkResponse(plan.Adapt<WorkoutPlan>()); 
-            logger.LogDebug("User has no workout plan");
-
-            return ResponseHelper.NotFoundResponse<WorkoutPlan>("User has no workout plan");
-
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task<ServiceResponse<PagedResult<WorkoutPlan>>> GetUserWorkoutPlansAsync(string userId, BaseFilter filter)
-    {
-        try
-        {
-            logger.LogInformation("Fetching all workout plans for user: {UserId}", userId);
-            
-            if (!await UserExistsAsync(userId)) 
-            {
-                logger.LogDebug("User not found");
-
-                return ResponseHelper.NotFoundResponse<PagedResult<WorkoutPlan>>("User not found");
-            }
-            
-            var plans = context.WorkoutPlans
-                .Include(p => p.Exercises)
-                .Where(p => p.UserId == userId)
-                .AsNoTracking().AsQueryable();
-            
-            
-            var totalCount = await plans.CountAsync();
-            
-            var data = await plans
-                .OrderByDescending(t => t.CreatedAt)
+            var exercises = await exercisesQuery
+                .OrderBy(e => e.Name)
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(p => new WorkoutPlan
-                {
-                    Id = p.Id,
-                    UserId = p.UserId,
-                    User = p.User,
-                    Name = p.Name,
-                    Description = p.Description,
-                    CreatedAt = p.CreatedAt,
-                    UpdatedAt = p.UpdatedAt,
-                    Exercises = p.Exercises,
+                .ToListAsync();
 
-                }).ToListAsync();
-            
-            var response = new PagedResult<WorkoutPlan>
+            var response = new PagedResult<Exercise>
             {
                 TotalCount = totalCount,
                 PageSize = filter.PageSize,
                 Page = filter.PageNumber,
-                Payload = data
+                Payload = exercises
             };
-            
+
             return ResponseHelper.OkResponse(response);
         }
         catch (Exception e)
         {
-          logger.LogError(e, "Error fetching workout plans");
-            return ResponseHelper.InternalServerErrorResponse<PagedResult<WorkoutPlan>>("Error fetching workout plans");
+            logger.LogError(e, "Error fetching paginated exercises");
+            return ResponseHelper.InternalServerErrorResponse<PagedResult<Exercise>>(
+                "Error fetching paginated exercises");
         }
     }
 
-    public async Task<ServiceResponse<WorkoutPlan>> UpdateWorkoutPlanAsync(string planId, WorkoutPlanRequest updateRequest)
+    public async Task<ServiceResponse<Exercise>> GetExerciseWithStepsAsync(string exerciseId, string userId)
+    {
+        try
+        {
+            logger.LogInformation("Fetching exercise with ID: {ExerciseId}", exerciseId);
+
+            if (!await UserExistsAsync(userId))
+            {
+                logger.LogDebug("User not found");
+                return ResponseHelper.NotFoundResponse<Exercise>("User not found");
+            }
+
+            var exercise = await context.Exercises
+                .Include(e => e.Steps)
+                .FirstOrDefaultAsync(e => e.Id == exerciseId && e.UserId == userId);
+
+            if (exercise == null)
+            {
+                logger.LogDebug("Exercise not found");
+                return ResponseHelper.NotFoundResponse<Exercise>("Exercise not found");
+            }
+
+            return ResponseHelper.OkResponse(exercise);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error fetching exercise with steps");
+            return ResponseHelper.InternalServerErrorResponse<Exercise>("Error fetching exercise with steps");
+        }
+    }
+
+    public async Task<ServiceResponse<WorkoutPlan>> UpdateWorkoutPlanAsync(string planId,
+        WorkoutPlanRequest updateRequest)
     {
         try
         {
             logger.LogInformation("Updating workout plan with ID: {PlanId}", planId);
-            
+
             var planExists = await context.WorkoutPlans.AnyAsync(p => p.Id == planId);
             if (!planExists)
             {
@@ -163,42 +146,46 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("Workout plan not found");
             }
-            
-            if (!await UserExistsAsync(updateRequest.UserId)) 
+
+            if (!await UserExistsAsync(updateRequest.UserId))
             {
                 logger.LogDebug("User not found");
 
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("User not found");
             }
-            
+
             var plan = await context.WorkoutPlans
                 .Include(p => p.Exercises)
                 .FirstOrDefaultAsync(p => p.Id == planId && p.UserId == updateRequest.UserId);
-            
+
             if (plan == null)
             {
                 logger.LogDebug("plan does not belong to user");
 
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("plan does not belong to user");
             }
-            
+
+            var exercises = await GenerateExercisesAsync(updateRequest); 
+
+
             plan.UpdatedAt = DateTime.UtcNow;
-            plan.Exercises = GenerateExercises(updateRequest);
+            plan.Exercises = exercises;
             plan.Description = updateRequest.PlanType.ToString();
             context.WorkoutPlans.Update(plan);
             var isSaved = await context.SaveChangesAsync() > 0;
             if (!isSaved)
             {
-              logger.LogDebug("Could not update workout plan");
-              
+                logger.LogDebug("Could not update workout plan");
+
                 return ResponseHelper.InternalServerErrorResponse<WorkoutPlan>("Could not update workout plan");
             }
+
             return ResponseHelper.OkResponse(plan.Adapt<WorkoutPlan>());
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error fetching workout plan");  
-            
+            logger.LogError(e, "Error fetching workout plan");
+
             return ResponseHelper.InternalServerErrorResponse<WorkoutPlan>("Error fetching workout plan");
         }
     }
@@ -208,14 +195,14 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         try
         {
             logger.LogInformation("Deleting workout plan with ID: {PlanId}", planId);
-            
-            if (!await UserExistsAsync(userId)) 
+
+            if (!await UserExistsAsync(userId))
             {
                 logger.LogDebug("User not found");
-                
+
                 return ResponseHelper.NotFoundResponse<bool>("User not found");
             }
-            
+
             var planExists = await context.WorkoutPlans.AnyAsync(p => p.Id == planId && p.UserId == userId);
             if (!planExists)
             {
@@ -223,7 +210,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
                 return ResponseHelper.NotFoundResponse<bool>("Workout plan not found");
             }
-            
+
             var plan = await context.WorkoutPlans
                 .FirstOrDefaultAsync(p => p.Id == planId && p.UserId == userId);
 
@@ -233,67 +220,183 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 context.WorkoutPlans.Remove(plan);
                 await context.SaveChangesAsync();
             }
-            
+
             return ResponseHelper.OkResponse(true);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error deleting workout plan");
-            
+
             return ResponseHelper.InternalServerErrorResponse<bool>("Error deleting workout plan");
         }
     }
-
-
-    private static List<Exercise> GenerateExercises(WorkoutPlanRequest plan)
+    
+    private async Task<List<Exercise>> GenerateExercisesAsync(WorkoutPlanRequest plan)
     {
-        var exercises = new List<Exercise>();
-
-        switch (plan.PlanType)
+        var user = await context.Users.FindAsync(plan.UserId);
+        if (user == null)
         {
-            case WorkoutPlanType.LoseWeight:
-                exercises.Add(new Exercise { Name = "Running", DurationMinutes = 30, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Cycling", DurationMinutes = 45, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.GainMuscle:
-                exercises.Add(new Exercise { Name = "Weight Lifting", DurationMinutes = 60, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Push Ups", DurationMinutes = 20, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.ImproveEndurance:
-                exercises.Add(new Exercise { Name = "Swimming", DurationMinutes = 30, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Jogging", DurationMinutes = 40, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.IncreaseFlexibility:
-                exercises.Add(new Exercise { Name = "Yoga", DurationMinutes = 60, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Stretching", DurationMinutes = 30, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.BuildStrength:
-                exercises.Add(new Exercise { Name = "Deadlifts", DurationMinutes = 45, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Squats", DurationMinutes = 30, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.CardioFitness:
-                exercises.Add(new Exercise { Name = "Jump Rope", DurationMinutes = 20, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "HIIT", DurationMinutes = 30, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.ToneBody:
-                exercises.Add(new Exercise { Name = "Pilates", DurationMinutes = 50, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Bodyweight Exercises", DurationMinutes = 40, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.ImproveBalance:
-                exercises.Add(new Exercise { Name = "Balance Board", DurationMinutes = 30, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Tai Chi", DurationMinutes = 45, UserId = plan.UserId});
-                break;
-            case WorkoutPlanType.IncreaseStamina:
-                exercises.Add(new Exercise { Name = "Rowing", DurationMinutes = 40, UserId = plan.UserId});
-                exercises.Add(new Exercise { Name = "Stair Climbing", DurationMinutes = 30, UserId = plan.UserId});
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            throw new ArgumentException("User not found");
+        }
+
+        var exercises = new List<Exercise>();
+        int workoutDays = user.HowOftenWorkOut switch
+        {
+            "1 time a week" => 1,
+            "2-3 times a week" => 2,
+            "4-5 times a week" => 4,
+            "6-7 times a week" => 6,
+            _ => 3
+        };
+
+        var weatherData = await weatherService.GetCurrentWeatherAsync("Ghana");
+
+        for (int i = 0; i < workoutDays; i++)
+        {
+            if (weatherData.IsRaining)
+            {
+                // Indoor exercises for rainy weather
+                exercises.Add(CreateExercise(plan, i + 1, "Indoor Cardio"));
+                exercises.Add(CreateExercise(plan, i + 1, "Yoga Session"));
+            }
+            else if (weatherData.Temperature > 30)
+            {
+                // Hot weather exercises
+                exercises.Add(CreateExercise(plan, i + 1, "Swimming"));
+                exercises.Add(CreateExercise(plan, i + 1, "Early Morning Run"));
+            }
+            else if (weatherData.Temperature < 10)
+            {
+                // Cold weather exercises
+                exercises.Add(CreateExercise(plan, i + 1, "Indoor HIIT"));
+                exercises.Add(CreateExercise(plan, i + 1, "Strength Training"));
+            }
+            else
+            {
+                // Moderate weather exercises
+                exercises.Add(CreateExercise(plan, i + 1, "Outdoor Running"));
+                exercises.Add(CreateExercise(plan, i + 1, "Cycling"));
+            }
         }
 
         return exercises;
     }
-    
+    private Exercise CreateExercise(WorkoutPlanRequest plan, int day, string workoutLabel)
+    {
+        return plan.PlanType switch
+        {
+            WorkoutPlanType.LoseWeight => new Exercise
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Name = $"Running - Day {day} ({workoutLabel})",
+                DurationMinutes = 30,
+                IsStarted = false,
+                IsCompleted = false,
+                UserId = plan.UserId,
+                Steps = new List<Step>
+                {
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Warm up for 5 minutes",
+                        DurationMinutes = 5, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Run at a steady pace",
+                        DurationMinutes = 20, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Cool down for 5 minutes",
+                        DurationMinutes = 5, IsCompleted = false
+                    }
+                }
+            },
+            WorkoutPlanType.GainMuscle => new Exercise
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Name = $"Weight Lifting - Day {day} ({workoutLabel})",
+                DurationMinutes = 45,
+                IsStarted = false,
+                IsCompleted = false,
+                UserId = plan.UserId,
+                Steps = new List<Step>
+                {
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Warm up with light weights",
+                        DurationMinutes = 10, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Perform 3 sets of 10 reps",
+                        DurationMinutes = 30, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Cool down with stretches",
+                        DurationMinutes = 5, IsCompleted = false
+                    }
+                }
+            },
+            WorkoutPlanType.ImproveEndurance => new Exercise
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Name = $"Swimming - Day {day} ({workoutLabel})",
+                DurationMinutes = 40,
+                IsStarted = false,
+                IsCompleted = false,
+                UserId = plan.UserId,
+                Steps = new List<Step>
+                {
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Warm up with light swimming",
+                        DurationMinutes = 10, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Swim at a steady pace",
+                        DurationMinutes = 25, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Cool down with slow strokes",
+                        DurationMinutes = 5, IsCompleted = false
+                    }
+                }
+            },
+            WorkoutPlanType.IncreaseFlexibility => new Exercise
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Name = $"Yoga - Day {day} ({workoutLabel})",
+                DurationMinutes = 60,
+                IsStarted = false,
+                IsCompleted = false,
+                UserId = plan.UserId,
+                Steps = new List<Step>
+                {
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Start with basic poses",
+                        DurationMinutes = 20, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "Hold each pose for 30 seconds",
+                        DurationMinutes = 30, IsCompleted = false
+                    },
+                    new Step
+                    {
+                        Id = Guid.NewGuid().ToString("N"), Description = "End with relaxation poses",
+                        DurationMinutes = 10, IsCompleted = false
+                    }
+                }
+            },
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
     private async Task<bool> UserExistsAsync(string userId)
     {
         return await context.Users.AnyAsync(u => u.Id == userId);

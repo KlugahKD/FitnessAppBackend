@@ -11,6 +11,8 @@ C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bi
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\EntityFramework.SqlServer.dll
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\EntityFramework.dll
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Humanizer.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Mapster.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Mapster.Core.dll
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Microsoft.AspNet.Identity.Core.dll
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Microsoft.AspNet.Identity.EntityFramework.dll
 C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
