@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAppBackend.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class WorkoutController(IWorkoutService workoutService) : ControllerBase
 {
     /// <summary>

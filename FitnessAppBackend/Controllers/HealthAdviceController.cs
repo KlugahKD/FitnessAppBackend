@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAppBackend.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class HealthAdviceController(IHealthAdviceService healthAdviceService) : ControllerBase
 {
     [HttpGet("personalized")]

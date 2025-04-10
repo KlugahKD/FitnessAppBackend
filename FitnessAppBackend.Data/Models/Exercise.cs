@@ -8,5 +8,6 @@ public class Exercise
     public bool IsStarted { get; set; } 
     public bool IsCompleted { get; set; } 
     public string UserId { get; set; }
+    public DateTime Date { get; set; }
     public List<Step> Steps { get; set; } 
 }

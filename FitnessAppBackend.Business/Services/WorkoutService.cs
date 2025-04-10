@@ -20,18 +20,23 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             if (!await UserExistsAsync(plan.UserId))
             {
                 logger.LogDebug("User not found");
-
                 return ResponseHelper.NotFoundResponse<WorkoutPlan>("User not found");
             }
 
-            var planExists =
-                await context.WorkoutPlans.AnyAsync(
-                    p => p.UserId == plan.UserId && p.Description == plan.PlanType.ToString());
-            if (planExists)
-            {
-                logger.LogDebug("Workout plan already exists");
+            var currentMonth = DateTime.UtcNow.Month;
+            var currentYear = DateTime.UtcNow.Year;
 
-                return ResponseHelper.BadRequestResponse<WorkoutPlan>("Workout plan already exists");
+            var existingPlan = await context.WorkoutPlans
+                .Where(p => p.UserId == plan.UserId)
+                .OrderByDescending(p => p.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (existingPlan != null && 
+                existingPlan.CreatedAt.Month == currentMonth && 
+                existingPlan.CreatedAt.Year == currentYear)
+            {
+                logger.LogDebug("Workout plan already exists for the current month");
+                return ResponseHelper.BadRequestResponse<WorkoutPlan>("Workout plan already exists for the current month");
             }
 
             var exercises = await GenerateExercisesAsync(plan);
@@ -53,7 +58,6 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         catch (Exception e)
         {
             logger.LogError(e, "Error creating workout plan");
-
             return ResponseHelper.InternalServerErrorResponse<WorkoutPlan>("Error creating workout plan");
         }
     }
@@ -230,7 +234,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             return ResponseHelper.InternalServerErrorResponse<bool>("Error deleting workout plan");
         }
     }
-    
+
     private async Task<List<Exercise>> GenerateExercisesAsync(WorkoutPlanRequest plan)
     {
         var user = await context.Users.FindAsync(plan.UserId);
@@ -249,50 +253,62 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             _ => 3
         };
 
-        var weatherData = await weatherService.GetCurrentWeatherAsync("Ghana");
+        var registrationDate = user.CreatedAt.Date;
+        var currentDate = DateTime.UtcNow.Date;
+        var daysInMonth = DateTime.DaysInMonth(currentDate.Year, currentDate.Month);
 
-        for (int i = 0; i < workoutDays; i++)
+        var workoutDates = Enumerable.Range(0, daysInMonth)
+            .Select(d => registrationDate.AddDays(d))
+            .Where(date => date.Month == currentDate.Month && (date - registrationDate).Days % (7 / workoutDays) == 0)
+            .Take(workoutDays * 4) 
+            .ToList();
+
+        var weatherData = await weatherService.GetCurrentWeatherAsync("Ghana") ?? new SimplifiedWeatherData()
         {
-            if (weatherData.IsRaining)
+            Temperature = 25,
+            IsRaining = false
+        };
+
+        foreach (var date in workoutDates)
+        {
+            if (weatherData is { IsRaining: true })
             {
-                // Indoor exercises for rainy weather
-                exercises.Add(CreateExercise(plan, i + 1, "Indoor Cardio"));
-                exercises.Add(CreateExercise(plan, i + 1, "Yoga Session"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Indoor Cardio"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Yoga Session"));
             }
             else if (weatherData.Temperature > 30)
             {
-                // Hot weather exercises
-                exercises.Add(CreateExercise(plan, i + 1, "Swimming"));
-                exercises.Add(CreateExercise(plan, i + 1, "Early Morning Run"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Swimming"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Early Morning Run"));
             }
             else if (weatherData.Temperature < 10)
             {
-                // Cold weather exercises
-                exercises.Add(CreateExercise(plan, i + 1, "Indoor HIIT"));
-                exercises.Add(CreateExercise(plan, i + 1, "Strength Training"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Indoor HIIT"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Strength Training"));
             }
             else
             {
-                // Moderate weather exercises
-                exercises.Add(CreateExercise(plan, i + 1, "Outdoor Running"));
-                exercises.Add(CreateExercise(plan, i + 1, "Cycling"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Outdoor Running"));
+                exercises.Add(CreateExercise(plan, workoutDates.IndexOf(date) + 1, date, "Cycling"));
             }
         }
 
         return exercises;
     }
-    private Exercise CreateExercise(WorkoutPlanRequest plan, int day, string workoutLabel)
+
+    private Exercise CreateExercise(WorkoutPlanRequest plan, int day, DateTime workoutDate, string workoutLabel)
     {
         return plan.PlanType switch
         {
             WorkoutPlanType.LoseWeight => new Exercise
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Name = $"Running - Day {day} ({workoutLabel})",
+                Name = $"Running - Day {day}",
                 DurationMinutes = 30,
                 IsStarted = false,
                 IsCompleted = false,
                 UserId = plan.UserId,
+                Date = workoutDate,
                 Steps = new List<Step>
                 {
                     new Step

@@ -11,4 +11,6 @@ public class ApplicationUser : IdentityUser
     public string? PreferredAvatar { get; set; }
     public string? HowOftenWorkOut { get; set; }
     public virtual ICollection<WorkoutPlan> WorkoutPlans { get; set; } = new List<WorkoutPlan>();
+
+    public DateTime CreatedAt { get; set; }
 }
