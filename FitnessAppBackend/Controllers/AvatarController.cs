@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Business.Services;
 using FitnessAppBackend.Helper;
 using Microsoft.AspNetCore.Authorization;
@@ -16,41 +14,28 @@ namespace FitnessAppBackend.Controllers;
 public class AvatarController(IAvatarService avatarService) : ControllerBase
 {
     /// <summary>
-    /// Retrieves a paginated list of available avatars.
+    /// Gets a response from the user's preferred avatar based on the provided question.
     /// </summary>
-    /// <param name="filter">The filter parameters for pagination.</param>
-    /// <returns>A paginated list of avatars.</returns>
-    [HttpGet]
-    public async Task<IActionResult> GetAvailableAvatars([FromQuery] BaseFilter filter)
+    /// <param name="userId">The ID of the user interacting with the avatar.</param>
+    /// <param name="question">The question to ask the avatar.</param>
+    /// <returns>A response from the avatar.</returns>
+    [HttpGet("response")]
+    public async Task<IActionResult> GetResponse([FromQuery] string userId, [FromQuery] string question)
     {
-        var response = await avatarService.GetAvailableAvatarsAsync(filter);
-        return ActionResultHelper.ToActionResult(response);
+        var result = await avatarService.GetResponseAsync(userId, question);
+
+        return ActionResultHelper.ToActionResult(result);
     }
 
     /// <summary>
-    /// Retrieves a specific avatar by ID.
+    /// Gets a motivational message from the user's preferred avatar.
     /// </summary>
-    /// <param name="id">The ID of the avatar.</param>
-    /// <returns>The avatar details.</returns>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetAvatarById(string id)
+    /// <param name="userId">The ID of the user requesting the motivational message.</param>
+    /// <returns>A motivational message from the avatar.</returns>
+    [HttpGet("motivational-message")]
+    public async Task<IActionResult> GetMotivationalMessage([FromQuery] string userId)
     {
-        var response = await avatarService.GetAvatarByIdAsync(id);
-        return ActionResultHelper.ToActionResult(response);
-    }
-
-    /// <summary>
-    /// Assigns an avatar to the authenticated user.
-    /// </summary>
-    /// <param name="avatarId">The ID of the avatar to assign.</param>
-    /// <returns>A boolean indicating the result of the assignment.</returns>
-    [HttpPost("assign")]
-    public async Task<IActionResult> AssignAvatarToUser([FromBody] string avatarId)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized();
-
-        var response = await avatarService.AssignAvatarToUserAsync(userId, avatarId);
-        return ActionResultHelper.ToActionResult(response);
+        var result = await avatarService.GetMotivationalMessageAsync(userId);
+        return ActionResultHelper.ToActionResult(result);
     }
 }

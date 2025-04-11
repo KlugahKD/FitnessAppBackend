@@ -1,8 +1,6 @@
 using FitnessAppBackend.Business.Common;
 using FitnessAppBackend.Business.Helper;
 using FitnessAppBackend.Data.Data;
-using FitnessAppBackend.Data.Models;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,92 +8,66 @@ namespace FitnessAppBackend.Business.Services;
 
 public class AvatarService(ApplicationDbContext context, ILogger<AvatarService> logger) : IAvatarService
 {
-    public async Task<ServiceResponse<PagedResult<Avatar>>> GetAvailableAvatarsAsync(BaseFilter filter)
+   public async Task<ServiceResponse<string>> GetResponseAsync(string userId, string question)
+{
+    try
     {
-        try
+        logger.LogInformation("User with Id {Id}, is Interacting with avatar", userId);
+        var user = await context.Users.Include(u => u.PreferredAvatar).FirstOrDefaultAsync(u => u.Id == userId);
+        if (user?.PreferredAvatar == null)
         {
-            logger.LogInformation("Getting all available avatars");
+            logger.LogDebug("User does not have an avatar");
+            return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
+        }
 
-            var avatars = context.Avatars.AsNoTracking().AsQueryable();
-            ;
-            var totalCount = await avatars.CountAsync();
-
-            var data = await avatars
-                .OrderByDescending(t => t.Name)
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .Select(a => new Avatar
-                {
-                    Id = a.Id,
-                    Name = a.Name,
-                    Description = a.Description,
-                    Specialization = a.Specialization
-                }).ToListAsync();
-
-            var response = new PagedResult<Avatar>
-            {
-                TotalCount = totalCount,
-                PageSize = filter.PageSize,
-                Page = filter.PageNumber,
-                Payload = data
-            };
-
+        var avatar = await context.Avatars.FirstOrDefaultAsync(a => a.Name == user.PreferredAvatar);
+        if (avatar == null)
+        {
+            logger.LogDebug("Avatar not found");
+            return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
+        }
+        
+        if (avatar.Responses.TryGetValue(question, out var response))
+        {
             return ResponseHelper.OkResponse(response);
         }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error getting avatars");
-            return ResponseHelper.InternalServerErrorResponse<PagedResult<Avatar>>("Error getting avatars");
-        }
-    }
 
-    public async Task<ServiceResponse<Avatar>> GetAvatarByIdAsync(string id)
+        return ResponseHelper.OkResponse("I don't have an answer for that.");
+    }
+    catch (Exception e)
     {
-        try
-        {
-            logger.LogInformation("Getting avatar by id: {Id}", id);
-            var avatar = await context.Avatars.FindAsync(id);
-            if (avatar != null) return ResponseHelper.OkResponse(avatar.Adapt<Avatar>());
-            logger.LogDebug("Avatar with id {Id} not found", id);
-
-            return ResponseHelper.NotFoundResponse<Avatar>("Avatar not found");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error getting avatar by id: {Id}", id);
-
-            return ResponseHelper.InternalServerErrorResponse<Avatar>("Error getting avatar");
-        }
+        logger.LogError(e, "Error while getting response for user with Id {Id}", userId);
+        return ResponseHelper.InternalServerErrorResponse<string>("An error occurred while processing your request.");
     }
+}
 
-    public async Task<ServiceResponse<bool>> AssignAvatarToUserAsync(string userId, string avatarId)
+public async Task<ServiceResponse<string>> GetMotivationalMessageAsync(string userId)
+{
+    try
     {
-        try
+        logger.LogInformation("Fetching motivational message for user with Id {Id}", userId);
+        var user = await context.Users.Include(u => u.PreferredAvatar).FirstOrDefaultAsync(u => u.Id == userId);
+        if (user?.PreferredAvatar == null)
         {
-            logger.LogInformation("Assigning avatar {AvatarId} to user {UserId}", avatarId, userId);
-
-            var user = await context.Users.FindAsync(userId);
-            var avatar = await context.Avatars.FindAsync(avatarId);
-
-            if (user == null || avatar == null)
-            {
-                logger.LogInformation("user {UserId} or avatar {AvatarId} not found", userId, avatarId);
-
-                return ResponseHelper.NotFoundResponse<bool>("User or avatar not found");
-            }
-
-            user.PreferredAvatar = avatar.Id;
-            var isSaved = await context.SaveChangesAsync() > 0;
-            if (isSaved) return ResponseHelper.OkResponse(true);
-            logger.LogError("Error saving changes to user {UserId}", userId);
-
-            return ResponseHelper.InternalServerErrorResponse<bool>("Error saving changes");
+            logger.LogDebug("User does not have an avatar");
+            return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
         }
-        catch (Exception e)
+
+        var avatar = await context.Avatars.FirstOrDefaultAsync(a => a.Name == user.PreferredAvatar);
+        if (avatar == null)
         {
-            logger.LogError(e, "Error assigning avatar to user {UserId}", userId);
-
-            return ResponseHelper.InternalServerErrorResponse<bool>("Error assigning avatar to user");
+            logger.LogDebug("Avatar not found");
+            return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
         }
+        
+        var random = new Random();
+        var message = avatar.MotivationalMessages[random.Next(avatar.MotivationalMessages.Count)];
+        return ResponseHelper.OkResponse(message);
     }
+    catch (Exception e)
+    {
+        logger.LogError(e, "Error while getting motivational message for user with Id {Id}", userId);
+        return ResponseHelper.InternalServerErrorResponse<string>("An error occurred while processing your request.");
+    }
+}
 }
