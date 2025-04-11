@@ -234,6 +234,95 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             return ResponseHelper.InternalServerErrorResponse<bool>("Error deleting workout plan");
         }
     }
+    
+     public async Task<int> GetTotalWorkoutsAsync(string userId)
+    {
+        logger.LogInformation("Fetching total workouts for user: {UserId}", userId);
+
+        var totalWorkout = await context.Exercises.Where(e => e.UserId == userId).CountAsync();
+        if (totalWorkout == 0)
+        {
+            logger.LogWarning("No workouts found for user: {UserId}", userId);
+            return 0;
+        }
+
+        return totalWorkout;
+    }
+
+    public async Task<WeeklyStatsDto> GetWeeklyWorkoutStatsAsync(string userId)
+    {
+        logger.LogInformation("Fetching weekly workout stats for user: {UserId}", userId);
+
+        var startOfWeek = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(7);
+
+        var workouts = await context.Exercises
+            .Where(e => e.UserId == userId && e.Date >= startOfWeek && e.Date < endOfWeek)
+            .ToListAsync();
+
+        var completedWorkouts = workouts.Count(e => e.IsCompleted);
+        var totalWorkoutTime = workouts.Where(e => e.IsCompleted).Sum(e => e.DurationMinutes);
+
+        return new WeeklyStatsDto
+        {
+            CompletedWorkouts = completedWorkouts,
+            TotalWorkoutsForTheWeek = workouts.Count,
+            TotalWorkoutTime = $"{totalWorkoutTime / 60} hrs {totalWorkoutTime % 60} mins",
+            DaysWorkedOut = workouts.Where(e => e.IsCompleted).Select(e => e.Date.Date).Distinct().Count()
+        };
+    }
+
+    public async Task<int> CalculateWorkoutStreakAsync(string userId)
+    {
+        logger.LogInformation("Calculating workout streak for user: {UserId}", userId);
+
+        var exercises = await context.Exercises
+            .Where(e => e.UserId == userId)
+            .OrderByDescending(e => e.Date)
+            .ToListAsync();
+
+        int streak = 0;
+        DateTime? lastWorkoutDate = null;
+
+        foreach (var exercise in exercises)
+        {
+            if (!exercise.IsCompleted) break;
+
+            if (lastWorkoutDate == null || exercise.Date.Date == lastWorkoutDate.Value.AddDays(-1).Date)
+            {
+                streak++;
+                lastWorkoutDate = exercise.Date.Date;
+            }
+            else break;
+        }
+
+        return streak;
+    }
+    
+    public async Task<GraphDataDto> GetWorkoutGraphDataAsync(string userId)
+    {
+        logger.LogInformation("Fetching graph data for user: {UserId}", userId);
+
+        // Fetch all completed workouts for the user
+        var workouts = await context.Exercises
+            .Where(e => e.UserId == userId && e.IsCompleted)
+            .ToListAsync();
+
+        // Group workouts by type and count them
+        var groupedData = workouts
+            .GroupBy(e => e.Name)
+            .Select(g => new { WorkoutType = g.Key, Count = g.Count() })
+            .ToList();
+
+        // Prepare graph data
+        var graphData = new GraphDataDto
+        {
+            X = groupedData.Select(g => g.WorkoutType).ToList(),
+            Y = groupedData.Select(g => g.Count).ToList()
+        };
+
+        return graphData;
+    }
 
     private async Task<List<Exercise>> GenerateExercisesAsync(WorkoutPlanRequest plan)
     {

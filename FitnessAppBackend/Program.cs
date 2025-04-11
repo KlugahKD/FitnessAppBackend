@@ -29,6 +29,7 @@ builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 builder.Services.AddScoped<IAvatarService, AvatarService>();
 builder.Services.AddScoped<IHealthAdviceService, HealthAdviceService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(options =>

@@ -11,4 +11,8 @@ public interface IWorkoutService
     Task<ServiceResponse<bool>> DeleteWorkoutPlanAsync(string planId, string userId);
     Task<ServiceResponse<Exercise>> GetExerciseWithStepsAsync(string exerciseId, string userId);
     Task<ServiceResponse<PagedResult<Exercise>>> GetPaginatedExercisesAsync(string userId, BaseFilter filter);
+    Task<int> GetTotalWorkoutsAsync(string userId);
+    Task<WeeklyStatsDto> GetWeeklyWorkoutStatsAsync(string userId);
+    Task<int> CalculateWorkoutStreakAsync(string userId);
+    Task<GraphDataDto> GetWorkoutGraphDataAsync(string userId);
 }
