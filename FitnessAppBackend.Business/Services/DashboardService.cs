@@ -48,7 +48,10 @@ public class DashboardService(
             // Fetch graph data
             var graphData = await workoutService.GetWorkoutGraphDataAsync(userId);
 
-            // Build the response
+            var avgWorkoutTime = (weeklyStats.TotalWorkoutTime) /
+                                 (weeklyStats.DaysWorkedOut > 0 ? weeklyStats.DaysWorkedOut : 1);
+            var goalCompletionPercentage = (weeklyStats.DaysWorkedOut / 7.0) * 100;
+
             var data = new DashboardOverview
             {
                 Temperature = weather.Temperature,
@@ -62,12 +65,15 @@ public class DashboardService(
                     DaysWorkedOut = weeklyStats.DaysWorkedOut
                 },
                 DaysWorkedOut = weeklyStats.DaysWorkedOut,
-                MotivationalMessage = motivationalMessages.Message,
+                MotivationalMessage = motivationalMessages.Data,
                 GraphData = new GraphDataDto
                 {
-                    X = graphData.X,
-                    Y = graphData.Y
-                }
+                    X = graphData.Select(g => g.X).ToList(),
+                    Y = graphData.Select(g => g.Y).ToList()
+                },
+                AvgWorkoutTime = $"{avgWorkoutTime} min",
+                GoalCompletionPercentage = $"{goalCompletionPercentage:F0}%",
+                GoalCompletionDetails = $"{weeklyStats.DaysWorkedOut} of 6 days"
             };
 
             return ResponseHelper.OkResponse(data);

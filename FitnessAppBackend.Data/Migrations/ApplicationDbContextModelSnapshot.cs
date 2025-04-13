@@ -34,6 +34,9 @@ namespace FitnessAppBackend.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
@@ -114,6 +117,10 @@ namespace FitnessAppBackend.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.PrimitiveCollection<string>("MotivationalMessages")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -129,42 +136,26 @@ namespace FitnessAppBackend.Data.Migrations
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.Exercise", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsIndoor")
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsStarted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("RequiresEquipment")
-                        .HasColumnType("bit");
-
                     b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VideoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -176,35 +167,6 @@ namespace FitnessAppBackend.Data.Migrations
                     b.HasIndex("WorkoutPlanId");
 
                     b.ToTable("Exercises");
-                });
-
-            modelBuilder.Entity("FitnessAppBackend.Data.Models.ExerciseLog", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("CaloriesBurned")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ExerciseName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LoggedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ExerciseLogs");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.HealthAdvice", b =>
@@ -235,6 +197,32 @@ namespace FitnessAppBackend.Data.Migrations
                     b.HasIndex("Category");
 
                     b.ToTable("HealthAdvice");
+                });
+
+            modelBuilder.Entity("FitnessAppBackend.Data.Models.Step", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExerciseId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.ToTable("Steps");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.WorkoutPlan", b =>
@@ -407,15 +395,13 @@ namespace FitnessAppBackend.Data.Migrations
                         .HasForeignKey("WorkoutPlanId");
                 });
 
-            modelBuilder.Entity("FitnessAppBackend.Data.Models.ExerciseLog", b =>
+            modelBuilder.Entity("FitnessAppBackend.Data.Models.Step", b =>
                 {
-                    b.HasOne("FitnessAppBackend.Data.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("FitnessAppBackend.Data.Models.Exercise", null)
+                        .WithMany("Steps")
+                        .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.WorkoutPlan", b =>
@@ -483,6 +469,11 @@ namespace FitnessAppBackend.Data.Migrations
             modelBuilder.Entity("FitnessAppBackend.Data.Models.ApplicationUser", b =>
                 {
                     b.Navigation("WorkoutPlans");
+                });
+
+            modelBuilder.Entity("FitnessAppBackend.Data.Models.Exercise", b =>
+                {
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("FitnessAppBackend.Data.Models.WorkoutPlan", b =>

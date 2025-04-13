@@ -8,7 +8,6 @@ namespace FitnessAppBackend.Controllers;
 /// <summary>
 /// Controller for handling dashboard-related actions.
 /// </summary>
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DashboardController(IDashboardService dashboardService) : ControllerBase

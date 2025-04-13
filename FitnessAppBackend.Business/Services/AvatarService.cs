@@ -47,8 +47,8 @@ public class AvatarService(ApplicationDbContext context, ILogger<AvatarService> 
         try
         {
             logger.LogInformation("Fetching motivational message for user with Id {Id}", userId);
-            var user = await context.Users.Include(u => u.PreferredAvatar).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user?.PreferredAvatar == null)
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (string.IsNullOrEmpty(user?.PreferredAvatar))
             {
                 logger.LogDebug("User does not have an avatar");
                 return ResponseHelper.NotFoundResponse<string>("Avatar not found.");

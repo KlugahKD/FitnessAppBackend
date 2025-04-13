@@ -39,7 +39,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 return ResponseHelper.BadRequestResponse<WorkoutPlan>("Workout plan already exists for the current month");
             }
 
-            var exercises = await GenerateExercisesAsync(plan);
+             var exercises = await GenerateExercisesAsync(plan);
 
             var workoutPlan = new WorkoutPlan()
             {
@@ -267,7 +267,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         {
             CompletedWorkouts = completedWorkouts,
             TotalWorkoutsForTheWeek = workouts.Count,
-            TotalWorkoutTime = $"{totalWorkoutTime / 60} hrs {totalWorkoutTime % 60} mins",
+            TotalWorkoutTime = totalWorkoutTime,
             DaysWorkedOut = workouts.Where(e => e.IsCompleted).Select(e => e.Date.Date).Distinct().Count()
         };
     }
@@ -299,27 +299,30 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         return streak;
     }
     
-    public async Task<GraphDataDto> GetWorkoutGraphDataAsync(string userId)
+    public async Task<List<GraphDataItem>> GetWorkoutGraphDataAsync(string userId)
     {
-        logger.LogInformation("Fetching graph data for user: {UserId}", userId);
-
         // Fetch all completed workouts for the user
         var workouts = await context.Exercises
             .Where(e => e.UserId == userId && e.IsCompleted)
             .ToListAsync();
 
-        // Group workouts by type and count them
+        // Group workouts by day and count them
         var groupedData = workouts
-            .GroupBy(e => e.Name)
-            .Select(g => new { WorkoutType = g.Key, Count = g.Count() })
-            .ToList();
+            .GroupBy(e => e.Date.Date)
+            .ToDictionary(g => g.Key, g => g.Count());
 
-        // Prepare graph data
-        var graphData = new GraphDataDto
-        {
-            X = groupedData.Select(g => g.WorkoutType).ToList(),
-            Y = groupedData.Select(g => g.Count).ToList()
-        };
+        var startDate = DateTime.Today.AddDays(-6);
+        var graphData = Enumerable.Range(0, 7)
+            .Select(i =>
+            {
+                var date = startDate.AddDays(i);
+                return new GraphDataItem
+                {
+                    X = $"Day {i + 1}",
+                    Y = groupedData.GetValueOrDefault(date, 0)
+                };
+            })
+            .ToList();
 
         return graphData;
     }
@@ -335,10 +338,10 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         var exercises = new List<Exercise>();
         int workoutDays = user.HowOftenWorkOut switch
         {
-            "1 time a week" => 1,
-            "2-3 times a week" => 2,
-            "4-5 times a week" => 4,
-            "6-7 times a week" => 6,
+            "1-2 times a week" => 2,
+            "3-4 times a week" => 4,
+            "5-6 times a week" => 5,
+            "Everyday" => 7,
             _ => 3
         };
 
@@ -348,8 +351,8 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
         var workoutDates = Enumerable.Range(0, daysInMonth)
             .Select(d => registrationDate.AddDays(d))
-            .Where(date => date.Month == currentDate.Month && (date - registrationDate).Days % (7 / workoutDays) == 0)
-            .Take(workoutDays * 4) 
+            .Where(date => date.Month == currentDate.Month && workoutDays > 0 && (date - registrationDate).Days % Math.Max(1, (7 / workoutDays)) == 0)
+            .Take(workoutDays * 4)
             .ToList();
 
         var weatherData = await weatherService.GetCurrentWeatherAsync("Ghana") ?? new SimplifiedWeatherData()
@@ -357,6 +360,12 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             Temperature = 25,
             IsRaining = false
         };
+        
+        if (workoutDates.Count == 0)
+        {
+            logger.LogWarning("No workout dates generated. RegistrationDate: {RegistrationDate}, CurrentDate: {CurrentDate}, WorkoutDays: {WorkoutDays}",
+                registrationDate, currentDate, workoutDays);
+        }
 
         foreach (var date in workoutDates)
         {
@@ -383,6 +392,34 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
 
         return exercises;
+    }
+    
+    public async Task<WeeklyStatsDto> GetLastWeekWorkoutStatsAsync(string userId)
+    {
+        var oneWeekAgo = DateTime.Today.AddDays(-7);
+        var today = DateTime.Today;
+
+        // Fetch completed workouts for the last week
+        var lastWeekWorkouts = await context.Exercises
+            .Where(e => e.UserId == userId && e.IsCompleted && e.Date.Date >= oneWeekAgo && e.Date.Date < today)
+            .ToListAsync();
+
+        // Calculate total workout time
+        var totalWorkoutTime = lastWeekWorkouts.Sum(e => e.DurationMinutes);
+
+        // Count distinct days worked out
+        var daysWorkedOut = lastWeekWorkouts
+            .Select(e => e.Date.Date)
+            .Distinct()
+            .Count();
+
+        return new WeeklyStatsDto
+        {
+            CompletedWorkouts = lastWeekWorkouts.Count,
+            TotalWorkoutTime = totalWorkoutTime,
+            TotalWorkoutsForTheWeek = 7, // Assuming a 7-day week
+            DaysWorkedOut = daysWorkedOut
+        };
     }
 
     private Exercise CreateExercise(WorkoutPlanRequest plan, int day, DateTime workoutDate, string workoutLabel)

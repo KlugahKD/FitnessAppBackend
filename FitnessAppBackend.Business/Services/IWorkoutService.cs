@@ -14,5 +14,6 @@ public interface IWorkoutService
     Task<int> GetTotalWorkoutsAsync(string userId);
     Task<WeeklyStatsDto> GetWeeklyWorkoutStatsAsync(string userId);
     Task<int> CalculateWorkoutStreakAsync(string userId);
-    Task<GraphDataDto> GetWorkoutGraphDataAsync(string userId);
+    Task<List<GraphDataItem>> GetWorkoutGraphDataAsync(string userId);
+    Task<WeeklyStatsDto> GetLastWeekWorkoutStatsAsync(string userId);
 }

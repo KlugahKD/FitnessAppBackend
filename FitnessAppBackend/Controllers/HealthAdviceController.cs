@@ -1,30 +1,17 @@
-using System.Security.Claims;
 using FitnessAppBackend.Business.Services;
 using FitnessAppBackend.Data.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAppBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class HealthAdviceController(IHealthAdviceService healthAdviceService) : ControllerBase
 {
     [HttpGet("personalized")]
-    public async Task<ActionResult<IEnumerable<HealthAdvice>>> GetPersonalizedAdvice()
+    public async Task<ActionResult<IEnumerable<HealthAdvice>>> GetPersonalizedAdvice([FromQuery] string userId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized();
-
-        try
-        {
-            var advice = await healthAdviceService.GetPersonalisedHealthAdvice(userId);
-            return Ok(advice);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        var advice = await healthAdviceService.GetPersonalisedHealthAdvice(userId);
+        return Ok(advice);
     }
 }

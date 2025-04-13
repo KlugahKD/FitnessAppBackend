@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "G01S+nqAkqs=",
+  "dgSpecHash": "u+RereRiVz0=",
   "success": true,
   "projectFilePath": "C:\\Users\\Klugah Daniel Kojo\\RiderProjects\\FitnessAppBackend\\FitnessAppBackend\\FitnessAppBackend.csproj",
   "expectedPackageFiles": [
@@ -93,12 +93,6 @@
     "C:\\Users\\Klugah Daniel Kojo\\.nuget\\packages\\system.windows.extensions\\6.0.0\\system.windows.extensions.6.0.0.nupkg.sha512"
   ],
   "logs": [
-    {
-      "code": "NU1900",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json."
-    },
     {
       "code": "NU1701",
       "level": "Warning",

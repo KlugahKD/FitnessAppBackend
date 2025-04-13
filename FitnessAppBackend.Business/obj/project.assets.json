@@ -1147,6 +1147,7 @@
         "dependencies": {
           "Microsoft.AspNet.Identity.EntityFramework": "2.2.4",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "9.0.3",
+          "Microsoft.Data.SqlClient": "5.1.6",
           "Microsoft.EntityFrameworkCore.SqlServer": "9.0.3",
           "Microsoft.Extensions.Identity.Stores": "9.0.3"
         },
@@ -3168,12 +3169,6 @@
     }
   },
   "logs": [
-    {
-      "code": "NU1900",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json."
-    },
     {
       "code": "NU1701",
       "level": "Warning",

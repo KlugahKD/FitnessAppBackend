@@ -8,7 +8,6 @@ namespace FitnessAppBackend.Controllers;
 /// <summary>
 /// Controller for handling avatar-related actions.
 /// </summary>
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AvatarController(IAvatarService avatarService) : ControllerBase

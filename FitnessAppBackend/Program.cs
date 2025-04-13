@@ -30,6 +30,7 @@ builder.Services.AddScoped<IWeatherService, WeatherService>();
 builder.Services.AddScoped<IAvatarService, AvatarService>();
 builder.Services.AddScoped<IHealthAdviceService, HealthAdviceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<DataSeeder>();
 
 // Add Authentication
 builder.Services.AddAuthentication(options =>
@@ -50,13 +51,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DataSeeder.SeedAvatars(context);
+    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+    await seeder.SeedAvatars(scope.ServiceProvider);
 }
 
 app.MapOpenApi();

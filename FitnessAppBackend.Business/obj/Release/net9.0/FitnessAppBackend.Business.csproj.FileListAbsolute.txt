@@ -1,0 +1,16 @@
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\bin\Release\net9.0\FitnessAppBackend.Business.deps.json
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\bin\Release\net9.0\FitnessAppBackend.Business.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\bin\Release\net9.0\FitnessAppBackend.Business.pdb
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\bin\Release\net9.0\FitnessAppBackend.Data.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\bin\Release\net9.0\FitnessAppBackend.Data.pdb
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.csproj.AssemblyReference.cache
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.AssemblyInfoInputs.cache
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.AssemblyInfo.cs
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.csproj.CoreCompileInputs.cache
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.sourcelink.json
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessA.0D26211C.Up2Date
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\refint\FitnessAppBackend.Business.dll
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\FitnessAppBackend.Business.pdb
+C:\Users\Klugah Daniel Kojo\RiderProjects\FitnessAppBackend\FitnessAppBackend.Business\obj\Release\net9.0\ref\FitnessAppBackend.Business.dll

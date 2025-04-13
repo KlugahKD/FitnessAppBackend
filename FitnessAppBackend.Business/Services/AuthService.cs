@@ -12,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FitnessAppBackend.Business.Services;
 
-public class AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, ILogger<AuthService> logger)
+public class AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, ILogger<AuthService> logger, IWorkoutService workoutService)
     : IAuthService
 {
     public async Task<ServiceResponse<AuthResponse>> RegisterAsync(RegisterModel model)
@@ -37,17 +37,44 @@ public class AuthService(UserManager<ApplicationUser> userManager, IConfiguratio
                 DateOfBirth = model.DateOfBirth,
                 FitnessGoals = model.FitnessGoals,
                 HowOftenWorkOut = model.HowOftenWorkOut,
-                PreferredAvatar = model.AvatarChoice
+                PreferredAvatar = model.AvatarChoice,
+                CreatedAt = DateTime.Now
             };
-
+           
             var result = await userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
             {
                 logger.LogDebug("Failed to create user");
                 
-               return ResponseHelper.FailedDependencyResponse<AuthResponse>("Failed to create user");
+               return ResponseHelper.FailedDependencyResponse<AuthResponse>("Failed to create user or password is weak");
+            }
+            
+            if (string.IsNullOrWhiteSpace(model.FitnessGoals))
+            {
+                logger.LogDebug("FitnessGoals is null or empty");
+                return ResponseHelper.BadRequestResponse<AuthResponse>("Fitness goals are required");
             }
 
+            if (Enum.TryParse<WorkoutPlanType>(model.FitnessGoals, true, out var planType))
+            {
+                var planRequest = new WorkoutPlanRequest
+                {
+                    UserId = user.Id,
+                    PlanType = planType
+                };
+                var workoutPlan = await workoutService.CreateWorkoutPlanAsync(planRequest);
+                if (!workoutPlan.IsSuccessful)
+                {
+                    logger.LogDebug("Failed to create workout plan");
+                    return ResponseHelper.FailedDependencyResponse<AuthResponse>("Failed to create workout plan");
+                }
+            }
+            else
+            {
+                logger.LogDebug($"Invalid fitness goal provided: {model.FitnessGoals}");
+                return ResponseHelper.BadRequestResponse<AuthResponse>("Invalid fitness goal");
+            }
+            
             var response = new AuthResponse
             {
                 Email = user.Email,
