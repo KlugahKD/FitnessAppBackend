@@ -63,40 +63,26 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         }
     }
 
-    public async Task<ServiceResponse<PagedResult<Exercise>>> GetPaginatedExercisesAsync(string userId,
-        BaseFilter filter)
+    public async Task<ServiceResponse<List<Exercise>>> GetExercisesForTodayAsync(string userId)
     {
         try
         {
-            logger.LogInformation("Fetching paginated exercises for user: {UserId}", userId);
+            logger.LogInformation("Fetching exercises for today for user: {UserId}", userId);
 
-            var exercisesQuery = context.Exercises
-                .Where(e => e.UserId == userId)
-                .AsNoTracking();
+            var today = DateTime.UtcNow.Date;
 
-            var totalCount = await exercisesQuery.CountAsync();
-
-            var exercises = await exercisesQuery
+            var exercises = await context.Exercises
+                .Where(e => e.UserId == userId && e.Date.Date == today && !e.IsCompleted)
                 .OrderBy(e => e.Name)
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
+                .AsNoTracking()
                 .ToListAsync();
 
-            var response = new PagedResult<Exercise>
-            {
-                TotalCount = totalCount,
-                PageSize = filter.PageSize,
-                Page = filter.PageNumber,
-                Payload = exercises
-            };
-
-            return ResponseHelper.OkResponse(response);
+            return ResponseHelper.OkResponse(exercises);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error fetching paginated exercises");
-            return ResponseHelper.InternalServerErrorResponse<PagedResult<Exercise>>(
-                "Error fetching paginated exercises");
+            logger.LogError(e, "Error fetching exercises for today");
+            return ResponseHelper.InternalServerErrorResponse<List<Exercise>>("Error fetching exercises for today");
         }
     }
 
@@ -122,6 +108,37 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         {
             logger.LogError(e, "Error fetching exercise with steps");
             return ResponseHelper.InternalServerErrorResponse<Exercise>("Error fetching exercise with steps");
+        }
+    }
+    
+    public async Task<ServiceResponse<WorkoutSummaryDto>> GetCompletedAndMissedWorkoutsAsync(string userId)
+    {
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var completedWorkouts = await context.Exercises
+                .Where(e => e.UserId == userId && e.IsCompleted)
+                .OrderBy(e => e.Date)
+                .ToListAsync();
+
+            var missedWorkouts = await context.Exercises
+                .Where(e => e.UserId == userId && !e.IsCompleted && e.Date.Date < today)
+                .OrderBy(e => e.Date)
+                .ToListAsync();
+
+            var result = new WorkoutSummaryDto
+            {
+                CompletedWorkouts = completedWorkouts,
+                MissedWorkouts = missedWorkouts
+            };
+
+            return ResponseHelper.OkResponse(result);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error fetching completed and missed workouts");
+            return ResponseHelper.InternalServerErrorResponse<WorkoutSummaryDto>("Error fetching completed and missed workouts");
         }
     }
 
@@ -221,6 +238,83 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             logger.LogError(e, "Error deleting workout plan");
 
             return ResponseHelper.InternalServerErrorResponse<bool>("Error deleting workout plan");
+        }
+    }
+    
+    public async Task<ServiceResponse<bool>> MarkExerciseAsCompletedAsync(string exerciseId, string userId)
+    {
+        try
+        {
+            logger.LogInformation("Marking exercise with ID: {ExerciseId} as completed", exerciseId);
+        
+            var exercise = await context.Exercises
+                .FirstOrDefaultAsync(e => e.Id == exerciseId && e.UserId == userId);
+
+            if (exercise == null || exercise.IsCompleted || exercise.IsMissed)
+            {
+                logger.LogDebug("Exercise not found or already completed");
+                return ResponseHelper.NotFoundResponse<bool>("Cant mark this exercise as complete");
+            }
+
+            var steps = await context.Steps
+                .Where(s => s.ExerciseId == exerciseId)
+                .ToListAsync();
+
+            if (steps.Any(s => !s.IsCompleted))
+            {
+                logger.LogDebug("Not all steps are completed for exercise ID: {ExerciseId}", exerciseId);
+                return ResponseHelper.BadRequestResponse<bool>("Not all steps are completed.");
+            }
+
+            exercise.IsCompleted = true;
+
+            await context.SaveChangesAsync();
+
+            return ResponseHelper.OkResponse(true);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error marking exercise as completed");
+            return ResponseHelper.InternalServerErrorResponse<bool>("Error marking exercise as completed.");
+        }
+    }
+    
+    public async Task<ServiceResponse<bool>> MarkStepAsCompletedAsync(string stepId, string userId)
+    {
+        try
+        {
+            logger.LogInformation("Marking step with ID: {StepId} as completed", stepId);
+
+            var step = await context.Steps.FirstOrDefaultAsync(s => s.Id == stepId);
+            if (step == null)
+            {
+                logger.LogDebug("Step not found");
+                return ResponseHelper.NotFoundResponse<bool>("Step not found.");
+            }
+
+            var exercise = await context.Exercises.FirstOrDefaultAsync(e => e.Id == step.ExerciseId && e.UserId == userId);
+            if (exercise == null || exercise.IsCompleted || exercise.IsMissed)
+            {
+                logger.LogDebug("Exercise not found or does not belong to the user");
+                return ResponseHelper.NotFoundResponse<bool>("Cant mark this step as complete");
+            }
+
+            if (step.IsCompleted)
+            {
+                logger.LogDebug("Step is already completed");
+                return ResponseHelper.BadRequestResponse<bool>("Step is already completed.");
+            }
+
+            step.IsCompleted = true;
+            exercise.IsStarted = true;
+            await context.SaveChangesAsync();
+
+            return ResponseHelper.OkResponse(true);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error marking step as completed");
+            return ResponseHelper.InternalServerErrorResponse<bool>("Error marking step as completed.");
         }
     }
     
@@ -386,15 +480,12 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         var oneWeekAgo = DateTime.Today.AddDays(-7);
         var today = DateTime.Today;
 
-        // Fetch completed workouts for the last week
         var lastWeekWorkouts = await context.Exercises
             .Where(e => e.UserId == userId && e.IsCompleted && e.Date.Date >= oneWeekAgo && e.Date.Date < today)
             .ToListAsync();
 
-        // Calculate total workout time
         var totalWorkoutTime = lastWeekWorkouts.Sum(e => e.DurationMinutes);
 
-        // Count distinct days worked out
         var daysWorkedOut = lastWeekWorkouts
             .Select(e => e.Date.Date)
             .Distinct()
@@ -409,7 +500,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         };
     }
 
-    private Exercise CreateExercise(WorkoutPlanRequest plan, int day, DateTime workoutDate, string workoutLabel)
+    private static Exercise CreateExercise(WorkoutPlanRequest plan, int day, DateTime workoutDate, string workoutLabel)
     {
         return plan.PlanType switch
         {
@@ -529,6 +620,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
     private async Task<bool> UserExistsAsync(string userId)
     {
         var user = await userManager.FindByIdAsync(userId);
+        
         return user != null;
     }
 }

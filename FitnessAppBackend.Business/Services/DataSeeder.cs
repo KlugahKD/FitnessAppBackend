@@ -7,7 +7,7 @@ namespace FitnessAppBackend.Business.Services;
 
 public class DataSeeder
 {
-    public async Task SeedAvatars(IServiceProvider serviceProvider)
+    public static async Task SeedAvatars(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

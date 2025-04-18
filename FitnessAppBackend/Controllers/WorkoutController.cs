@@ -44,12 +44,12 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a paginated list of exercises for the authenticated user.
+    /// Retrieves a exercises to be done for the day.
     /// </summary>
-    [HttpGet("exercises/paginated")]
-    public async Task<IActionResult> GetPaginatedExercises([FromQuery] string userId, [FromBody] BaseFilter filter)
+    [HttpGet("exercises/today")]
+    public async Task<IActionResult> GetPaginatedExercises([FromQuery] string userId)
     {
-        var response = await workoutService.GetPaginatedExercisesAsync(userId, filter);
+        var response = await workoutService.GetExercisesForTodayAsync(userId);
         
         return ActionResultHelper.ToActionResult(response);
     }
@@ -61,6 +61,29 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     public async Task<IActionResult> GetExerciseWithSteps([FromQuery] string exerciseId, [FromQuery] string userId)
     {
         var response = await workoutService.GetExerciseWithStepsAsync(exerciseId, userId);
+        
+        return ActionResultHelper.ToActionResult(response);
+    }
+    
+    [HttpGet("exercises/summary")]
+    public async Task<IActionResult> GetCompletedAndMissedWorkouts([FromQuery] string userId)
+    {
+        var response = await workoutService.GetCompletedAndMissedWorkoutsAsync(userId);
+        return ActionResultHelper.ToActionResult(response);
+    }
+    
+    [HttpPut("exercises/{exerciseId}/complete")]
+    public async Task<IActionResult> MarkExerciseAsCompleted(string exerciseId, [FromQuery] string userId)
+    {
+        var response = await workoutService.MarkExerciseAsCompletedAsync(exerciseId, userId);
+        
+        return ActionResultHelper.ToActionResult(response);
+    }
+    
+    [HttpPut("steps/{stepId}/complete")]
+    public async Task<IActionResult> MarkStepAsCompleted(string stepId, [FromQuery] string userId)
+    {
+        var response = await workoutService.MarkStepAsCompletedAsync(stepId, userId);
         
         return ActionResultHelper.ToActionResult(response);
     }
