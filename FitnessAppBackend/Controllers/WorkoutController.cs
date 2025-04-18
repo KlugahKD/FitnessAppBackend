@@ -57,8 +57,8 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     /// <summary>
     /// Retrieves a specific exercise along with its steps for the authenticated user.
     /// </summary>
-    [HttpGet("exercises/{exerciseId}")]
-    public async Task<IActionResult> GetExerciseWithSteps(string exerciseId, [FromQuery] string userId)
+    [HttpGet("exercises/steps")]
+    public async Task<IActionResult> GetExerciseWithSteps([FromQuery] string exerciseId, [FromQuery] string userId)
     {
         var response = await workoutService.GetExerciseWithStepsAsync(exerciseId, userId);
         

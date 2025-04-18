@@ -68,11 +68,14 @@ public class DashboardService(
                 MotivationalMessage = motivationalMessages.Data,
                 GraphData = new GraphDataDto
                 {
-                    X = graphData.Select(g => g.X).ToList(),
-                    Y = graphData.Select(g => g.Y).ToList()
+                    Y = graphData.Select((g, index) => new GraphPoint
+                    {
+                        Name = Enum.GetName(typeof(DayOfWeek), (index % 7)) ?? "Unknown",
+                        Total = g.Y
+                    }).ToList()
                 },
                 AvgWorkoutTime = $"{avgWorkoutTime} min",
-                GoalCompletionPercentage = $"{goalCompletionPercentage:F0}%",
+                GoalCompletionPercentage = goalCompletionPercentage,
                 GoalCompletionDetails = $"{weeklyStats.DaysWorkedOut} of 6 days"
             };
 

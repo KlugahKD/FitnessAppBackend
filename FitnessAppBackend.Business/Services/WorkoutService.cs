@@ -3,13 +3,14 @@ using FitnessAppBackend.Business.DTO;
 using FitnessAppBackend.Business.Helper;
 using FitnessAppBackend.Data.Data;
 using FitnessAppBackend.Data.Models;
-using Mapster; 
+using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace FitnessAppBackend.Business.Services;
 
-public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService> logger,  IWeatherService weatherService) : IWorkoutService
+public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService> logger,  IWeatherService weatherService,  UserManager<ApplicationUser> userManager) : IWorkoutService
 {
     public async Task<ServiceResponse<WorkoutPlan>> CreateWorkoutPlanAsync(WorkoutPlanRequest plan)
     {
@@ -39,7 +40,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 return ResponseHelper.BadRequestResponse<WorkoutPlan>("Workout plan already exists for the current month");
             }
 
-             var exercises = await GenerateExercisesAsync(plan);
+            var exercises = await GenerateExercisesAsync(plan);
 
             var workoutPlan = new WorkoutPlan()
             {
@@ -68,12 +69,6 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         try
         {
             logger.LogInformation("Fetching paginated exercises for user: {UserId}", userId);
-
-            if (!await UserExistsAsync(userId))
-            {
-                logger.LogDebug("User not found");
-                return ResponseHelper.NotFoundResponse<PagedResult<Exercise>>("User not found");
-            }
 
             var exercisesQuery = context.Exercises
                 .Where(e => e.UserId == userId)
@@ -110,12 +105,6 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         try
         {
             logger.LogInformation("Fetching exercise with ID: {ExerciseId}", exerciseId);
-
-            if (!await UserExistsAsync(userId))
-            {
-                logger.LogDebug("User not found");
-                return ResponseHelper.NotFoundResponse<Exercise>("User not found");
-            }
 
             var exercise = await context.Exercises
                 .Include(e => e.Steps)
@@ -239,7 +228,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
     {
         logger.LogInformation("Fetching total workouts for user: {UserId}", userId);
 
-        var totalWorkout = await context.Exercises.Where(e => e.UserId == userId).CountAsync();
+        var totalWorkout = await context.Exercises.Where(e => e.UserId == userId && e.IsCompleted).CountAsync();
         if (totalWorkout == 0)
         {
             logger.LogWarning("No workouts found for user: {UserId}", userId);
@@ -301,12 +290,10 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
     
     public async Task<List<GraphDataItem>> GetWorkoutGraphDataAsync(string userId)
     {
-        // Fetch all completed workouts for the user
         var workouts = await context.Exercises
             .Where(e => e.UserId == userId && e.IsCompleted)
             .ToListAsync();
 
-        // Group workouts by day and count them
         var groupedData = workouts
             .GroupBy(e => e.Date.Date)
             .ToDictionary(g => g.Key, g => g.Count());
@@ -541,6 +528,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
     private async Task<bool> UserExistsAsync(string userId)
     {
-        return await context.Users.AnyAsync(u => u.Id == userId);
+        var user = await userManager.FindByIdAsync(userId);
+        return user != null;
     }
 }

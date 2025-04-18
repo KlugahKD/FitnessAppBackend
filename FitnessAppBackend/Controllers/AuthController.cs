@@ -21,6 +21,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
         var response = await authService.RegisterAsync(model);
+        
         return ActionResultHelper.ToActionResult(response);
     }
 

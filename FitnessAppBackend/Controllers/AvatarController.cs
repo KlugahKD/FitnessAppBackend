@@ -19,7 +19,7 @@ public class AvatarController(IAvatarService avatarService) : ControllerBase
     /// <param name="question">The question to ask the avatar.</param>
     /// <returns>A response from the avatar.</returns>
     [HttpGet("response")]
-    public async Task<IActionResult> GetResponse([FromQuery] string userId, [FromQuery] string question)
+    public async Task<IActionResult> GetResponse([FromQuery] string userId, [FromBody] string question)
     {
         var result = await avatarService.GetResponseAsync(userId, question);
 

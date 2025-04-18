@@ -13,10 +13,11 @@ public class AvatarService(ApplicationDbContext context, ILogger<AvatarService> 
         try
         {
             logger.LogInformation("User with Id {Id}, is Interacting with avatar", userId);
-            var user = await context.Users.Include(u => u.PreferredAvatar).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user?.PreferredAvatar == null)
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null || string.IsNullOrEmpty(user.PreferredAvatar))
             {
                 logger.LogDebug("User does not have an avatar");
+                
                 return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
             }
 
@@ -24,8 +25,18 @@ public class AvatarService(ApplicationDbContext context, ILogger<AvatarService> 
             if (avatar == null)
             {
                 logger.LogDebug("Avatar not found");
+                
                 return ResponseHelper.NotFoundResponse<string>("Avatar not found.");
             }
+            
+            if (avatar.Responses.Count == 0)
+            {
+                logger.LogDebug("Avatar has no responses configured");
+                
+                return ResponseHelper.OkResponse("I don't have any answers yet.");
+            }
+
+            logger.LogDebug("Available response keys: {Keys}", string.Join(", ", avatar.Responses.Keys));
 
             if (avatar.Responses.TryGetValue(question, out var response))
             {

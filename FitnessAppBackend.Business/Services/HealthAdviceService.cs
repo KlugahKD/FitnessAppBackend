@@ -122,9 +122,7 @@ public class HealthAdviceService(ApplicationDbContext context) : IHealthAdviceSe
 
         try
         {
-            var user = await context.Users
-                .Include(u => u.FitnessGoals)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
             {
@@ -133,57 +131,9 @@ public class HealthAdviceService(ApplicationDbContext context) : IHealthAdviceSe
             }
 
             var random = new Random();
-            var personalizedAdvice = new List<HealthAdvice>();
+            var randomAdvice = AdvicePool.OrderBy(_ => random.Next()).Take(2).ToList();
 
-            switch (user.FitnessGoals)
-            {
-                case "Weight Loss":
-                    personalizedAdvice.Add(new HealthAdvice
-                    {
-                        Title = "Weight Loss Tip",
-                        Content =
-                            "Incorporate high-intensity interval training (HIIT) and maintain a calorie deficit.",
-                        Category = "Fitness",
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    break;
-
-                case "Muscle Gain":
-                    personalizedAdvice.Add(new HealthAdvice
-                    {
-                        Title = "Muscle Gain Tip",
-                        Content = "Focus on progressive overload and consume sufficient protein.",
-                        Category = "Fitness",
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    break;
-
-                case "Endurance":
-                    personalizedAdvice.Add(new HealthAdvice
-                    {
-                        Title = "Endurance Tip",
-                        Content = "Incorporate long-distance running or cycling into your routine.",
-                        Category = "Fitness",
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    break;
-
-                default:
-                    personalizedAdvice.Add(new HealthAdvice
-                    {
-                        Title = "General Fitness Tip",
-                        Content = "Stay consistent and track your progress regularly.",
-                        Category = "Fitness",
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    break;
-            }
-
-
-            var randomAdvice = AdvicePool.OrderBy(_ => random.Next()).Take(5).ToList();
-            personalizedAdvice.AddRange(randomAdvice);
-
-            response.Data = personalizedAdvice;
+            response.Data = randomAdvice;
         }
         catch (Exception ex)
         {

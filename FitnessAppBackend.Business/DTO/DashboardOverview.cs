@@ -11,7 +11,7 @@ public class DashboardOverview
     public GraphDataDto GraphData { get; set; }
     public string AvgWorkoutTime { get; set; } // e.g., "38 min"
     public string WorkoutTimeDifference { get; set; } // e.g., "-2 min from last week"
-    public string GoalCompletionPercentage { get; set; } // e.g., "83%"
+    public double GoalCompletionPercentage { get; set; } 
     public string GoalCompletionDetails { get; set; } // e.g., "5 of 6 days"
 }
 
@@ -30,8 +30,13 @@ public class WeeklyStatsDto
 /// <summary>
 /// DTO for graph data.
 /// </summary>
-    public class GraphDataDto
-    {
-        public List<string> X { get; set; }
-        public List<int> Y { get; set; }
-    }
+public class GraphDataDto
+{
+    public List<GraphPoint> Y { get; set; } = new List<GraphPoint>();
+}
+
+public class GraphPoint
+{
+    public string Name { get; set; } = string.Empty;
+    public int Total { get; set; }
+}
