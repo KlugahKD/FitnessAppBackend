@@ -28,6 +28,7 @@ builder.Services.AddHttpClient<IAvatarService, AvatarService>();
 builder.Services.AddScoped<IHealthAdviceService, HealthAdviceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<DataSeeder>();
+builder.Services.AddHostedService<MarkMissedExercisesService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(options =>

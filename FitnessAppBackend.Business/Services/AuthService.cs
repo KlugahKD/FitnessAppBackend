@@ -71,10 +71,8 @@ public class AuthService(UserManager<ApplicationUser> userManager, IConfiguratio
             LastName = user.LastName
         };
         
-        // Store the data needed for the background task
         string userId = user.Id;
         
-        // Use the service provider to create a new scope
         _ = Task.Run(async () => 
         {
             try
