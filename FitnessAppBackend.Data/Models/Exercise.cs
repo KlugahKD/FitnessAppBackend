@@ -12,4 +12,5 @@ public class Exercise
     public string UserId { get; set; }
     public DateTime Date { get; set; }
     public List<Step> Steps { get; set; } 
+    public string? Img { get; set; }
 }

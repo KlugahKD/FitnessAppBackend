@@ -76,6 +76,11 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 .OrderBy(e => e.Name)
                 .AsNoTracking()
                 .ToListAsync();
+            
+            for (int i = 0; i < exercises.Count; i++)
+            {
+                exercises[i].Img = $"Health{i + 1}";
+            }
 
             return ResponseHelper.OkResponse(exercises);
         }
@@ -100,8 +105,10 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             {
                 logger.LogDebug("Exercise not found");
                 return ResponseHelper.NotFoundResponse<Exercise>("Exercise not found");
-            }
-
+            } 
+            
+            exercise.Img = $"Health{new Random().Next(1, 5)}";
+            
             return ResponseHelper.OkResponse(exercise);
         }
         catch (Exception e)
@@ -122,6 +129,11 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 .OrderByDescending(e => e.Date)
                 .Take(5)
                 .ToListAsync();
+            
+                for (int i = 0; i < pastWorkouts.Count; i++)
+                {
+                    pastWorkouts[i].Img = $"Health{i + 1}";
+                }
     
             var result = new WorkoutSummaryDto
             {
@@ -302,6 +314,16 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
 
             step.IsCompleted = true;
             exercise.IsStarted = true;
+
+            var allStepsCompleted = await context.Steps
+                .Where(s => s.ExerciseId == exercise.Id)
+                .AllAsync(s => s.IsCompleted);
+
+            if (allStepsCompleted)
+            {
+                exercise.IsCompleted = true;
+            }
+
             await context.SaveChangesAsync();
 
             return ResponseHelper.OkResponse(true);
@@ -490,7 +512,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         {
             CompletedWorkouts = lastWeekWorkouts.Count,
             TotalWorkoutTime = totalWorkoutTime,
-            TotalWorkoutsForTheWeek = 7, // Assuming a 7-day week
+            TotalWorkoutsForTheWeek = 7, 
             DaysWorkedOut = daysWorkedOut
         };
     }
