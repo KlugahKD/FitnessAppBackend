@@ -133,6 +133,11 @@ public class HealthAdviceService(ApplicationDbContext context) : IHealthAdviceSe
             var random = new Random();
             var randomAdvice = AdvicePool.OrderBy(_ => random.Next()).Take(2).ToList();
 
+            for (int i = 0; i < randomAdvice.Count; i++)
+            {
+                randomAdvice[i].Img = $"Health{i + 1}";
+            }
+
             response.Data = randomAdvice;
         }
         catch (Exception ex)

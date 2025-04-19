@@ -116,23 +116,18 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
         try
         {
             var today = DateTime.UtcNow.Date;
-
-            var completedWorkouts = await context.Exercises
-                .Where(e => e.UserId == userId && e.IsCompleted)
-                .OrderBy(e => e.Date)
+    
+            var pastWorkouts = await context.Exercises
+                .Where(e => e.UserId == userId && e.Date.Date < today)
+                .OrderByDescending(e => e.Date)
+                .Take(5)
                 .ToListAsync();
-
-            var missedWorkouts = await context.Exercises
-                .Where(e => e.UserId == userId && !e.IsCompleted && e.Date.Date < today)
-                .OrderBy(e => e.Date)
-                .ToListAsync();
-
+    
             var result = new WorkoutSummaryDto
             {
-                CompletedWorkouts = completedWorkouts,
-                MissedWorkouts = missedWorkouts
+                PastWorkouts = pastWorkouts
             };
-
+    
             return ResponseHelper.OkResponse(result);
         }
         catch (Exception e)
@@ -508,6 +503,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Name = $"Running - Day {day}",
+                Description = "A cardio-focused exercise to help burn calories and lose weight.",
                 DurationMinutes = 30,
                 IsStarted = false,
                 IsCompleted = false,
@@ -536,10 +532,12 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Name = $"Weight Lifting - Day {day} ({workoutLabel})",
+                Description = "A strength training exercise to build muscle mass.",
                 DurationMinutes = 45,
                 IsStarted = false,
                 IsCompleted = false,
                 UserId = plan.UserId,
+                Date = workoutDate,
                 Steps = new List<Step>
                 {
                     new Step
@@ -563,10 +561,12 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Name = $"Swimming - Day {day} ({workoutLabel})",
+                Description = "An endurance exercise to improve cardiovascular health.",
                 DurationMinutes = 40,
                 IsStarted = false,
                 IsCompleted = false,
                 UserId = plan.UserId,
+                Date = workoutDate,
                 Steps = new List<Step>
                 {
                     new Step
@@ -590,10 +590,12 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Name = $"Yoga - Day {day} ({workoutLabel})",
+                Description = "A flexibility-focused exercise to improve range of motion and reduce stress.",
                 DurationMinutes = 60,
                 IsStarted = false,
                 IsCompleted = false,
                 UserId = plan.UserId,
+                Date = workoutDate,
                 Steps = new List<Step>
                 {
                     new Step

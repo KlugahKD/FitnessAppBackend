@@ -69,6 +69,7 @@ public class WorkoutController(IWorkoutService workoutService) : ControllerBase
     public async Task<IActionResult> GetCompletedAndMissedWorkouts([FromQuery] string userId)
     {
         var response = await workoutService.GetCompletedAndMissedWorkoutsAsync(userId);
+        
         return ActionResultHelper.ToActionResult(response);
     }
     

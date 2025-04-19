@@ -31,10 +31,12 @@ public class AvatarController(IAvatarService avatarService) : ControllerBase
     /// </summary>
     /// <param name="userId">The ID of the user requesting the motivational message.</param>
     /// <returns>A motivational message from the avatar.</returns>
+     
     [HttpGet("motivational-message")]
     public async Task<IActionResult> GetMotivationalMessage([FromQuery] string userId)
     {
         var result = await avatarService.GetMotivationalMessageAsync(userId);
+        
         return ActionResultHelper.ToActionResult(result);
     }
 }
