@@ -29,16 +29,17 @@ public class DataSeeder
                     Specialization = "Cardio",
                     MotivationalMessages = new List<string>
                     {
-                        "One more mile, one step closer.",
-                        "Breathe deep, run free.",
-                        "Endurance is built, not born.",
-                        "The finish line is just a mindset.",
-                        "Your legs will forgive you. Your goals won’t.",
-                        "Push past the burn — that’s growth.",
-                        "You’re not tired, you’re transforming.",
-                        "Feel your heart beat for greatness.",
-                        "Fast or slow, just don’t stop.",
-                        "You’re lapping everyone on the couch."
+                        "Every drop of sweat is a badge of honor. Keep moving!",
+                        "When your legs scream stop, your heart says go. Listen to your heart.",
+                        "You’re not just running — you’re rewriting limits.",
+                        "Breathe through the burn. That’s your breakthrough moment.",
+                        "No matter the speed, every step is a victory.",
+                        "Push past your comfort zone — that’s where the magic happens.",
+                        "The road is long, but your endurance is longer.",
+                        "Pain is temporary. The pride of finishing lasts forever.",
+                        "Your lungs are expanding, your heart is growing stronger. This is transformation.",
+                        "You’ve already conquered the hardest part — starting. Now finish strong.",
+                        "You’re a machine — a relentless, heart-pounding, goal-chasing machine!"
                     },
                     Responses = new Dictionary<string, string>
                     {
@@ -59,16 +60,17 @@ public class DataSeeder
                     Specialization = "Strength Training",
                     MotivationalMessages = new List<string>
                     {
-                        "Pick it up. Put it down. Repeat until beast mode.",
-                        "Strong isn’t a look — it’s a mindset.",
-                        "The barbell is your best friend.",
-                        "Train smart. Lift heavy. Eat well.",
-                        "Every rep is a step closer to power.",
-                        "Grow through what you go through.",
-                        "Pain is temporary. Pride is forever.",
-                        "Big lifts. Bigger mindset.",
-                        "Muscles are earned, not bought.",
-                        "Your future self is flexing already."
+                        "Each rep carves greatness. Lift like you mean it.",
+                        "Strength isn't built in comfort — it's earned through grit.",
+                        "Today’s pain is tomorrow’s power. Own every set.",
+                        "Iron sharpens iron. Be unbreakable.",
+                        "Muscles grow when excuses shrink.",
+                        "Pick up that bar like it owes you something.",
+                        "Dominate the weights. Let the world hear your roar.",
+                        "The grind never lies — every lift is progress.",
+                        "Train like a warrior, fuel like a beast, rest like a king.",
+                        "No lift is wasted when the goal is greatness.",
+                        "You’re not just lifting weights — you’re building a legacy."
                     },
                     Responses = new Dictionary<string, string>
                     {
@@ -95,16 +97,16 @@ public class DataSeeder
                     Specialization = "Wellness & Recovery",
                     MotivationalMessages = new List<string>
                     {
-                        "Balance is the new hustle.",
-                        "Rest isn’t weakness — it’s strategy.",
-                        "A calm mind is a strong foundation.",
-                        "Stretch. Breathe. Thrive.",
-                        "Wellness is your competitive edge.",
-                        "Recharge. You’ve earned it.",
-                        "You’re healing — not stalling.",
-                        "Hydrate your hustle.",
-                        "Good sleep fuels good performance.",
-                        "Take care of your body — it’s the only one you get."
+                        "You’re not slowing down — you’re syncing with your strength.",
+                        "Recovery is a form of discipline. Honor the stillness.",
+                        "You can’t pour from an empty cup. Refill with intention.",
+                        "A strong body needs a calm mind. Breathe through the chaos.",
+                        "Stretch, restore, and return stronger than ever.",
+                        "You grow in rest as much as you do in reps.",
+                        "Inhale peace. Exhale tension. You are your sanctuary.",
+                        "Healing is not quitting. It’s preparation for a bigger comeback.",
+                        "Progress isn’t always loud. Sometimes it’s quiet and powerful.",
+                        "Rest, recharge, rise. Your wellness is your weapon."
                     },
                     Responses = new Dictionary<string, string>
                     {
@@ -125,17 +127,18 @@ public class DataSeeder
                     Specialization = "Core & Stability",
                     MotivationalMessages = new List<string>
                     {
-                        "Strong core, strong body.",
-                        "Abs are built with reps and kitchen discipline.",
-                        "Balance starts from the center.",
-                        "Feel the burn — it's working.",
-                        "No shortcuts to a strong core.",
-                        "Stability is strength you can’t always see.",
-                        "Tighten up, level up.",
-                        "Your powerhouse is your core.",
-                        "Let’s sculpt that strength!",
-                        "Control the movement. Don’t let it control you."
-                    },
+                        "A strong core is your foundation — build it brick by brick.",
+                        "Control is power. Feel every contraction count.",
+                        "Abs aren’t made overnight. They’re built in every rep and every meal.",
+                        "Balance. Strength. Precision. Your core drives it all.",
+                        "Don’t just go through the motion — own it with control.",
+                        "Your posture, your movement, your strength — all from your center.",
+                        "No shortcuts to a six-pack — just consistency and grit.",
+                        "Hold the plank. Embrace the shake. That’s strength being sculpted.",
+                        "Each crunch, each twist — you’re unlocking inner power.",
+                        "Let your core speak louder than your excuses."
+                    }
+                    ,
                     Responses = new Dictionary<string, string>
                     {
                         { "How can I get visible abs?", "Reduce body fat through diet, cardio, and ab workouts." },
