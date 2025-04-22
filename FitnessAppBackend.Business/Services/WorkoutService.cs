@@ -79,7 +79,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             
             for (int i = 0; i < exercises.Count; i++)
             {
-                exercises[i].Img = $"Health{i + 1}";
+                exercises[i].Img = $"workout{i + 1}";
             }
 
             return ResponseHelper.OkResponse(exercises);
@@ -107,7 +107,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
                 return ResponseHelper.NotFoundResponse<Exercise>("Exercise not found");
             } 
             
-            exercise.Img = $"Health{new Random().Next(1, 5)}";
+            exercise.Img = $"workout{new Random().Next(1, 5)}";
             
             return ResponseHelper.OkResponse(exercise);
         }
@@ -132,7 +132,7 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
             
                 for (int i = 0; i < pastWorkouts.Count; i++)
                 {
-                    pastWorkouts[i].Img = $"Health{i + 1}";
+                    pastWorkouts[i].Img = $"workout{i + 1}";
                 }
     
             var result = new WorkoutSummaryDto
