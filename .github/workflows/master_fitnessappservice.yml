@@ -65,4 +65,3 @@ jobs:
           app-name: 'FitnessAppService'
           slot-name: 'Production'
           package: .
-          
