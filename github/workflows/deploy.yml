@@ -1,0 +1,30 @@
+name: Build and Deploy .NET 9 App to Azure
+
+on:
+  push:
+    branches:
+      - master  # or 'main' if that's your branch
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Publish app
+      run: dotnet publish -c Release -o ./out
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: FitnessAppService  # <-- Must match your Azure App Service name
+        slot-name: production
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+        package: ./out
