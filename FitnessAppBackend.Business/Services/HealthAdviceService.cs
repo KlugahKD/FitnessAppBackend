@@ -135,7 +135,7 @@ public class HealthAdviceService(ApplicationDbContext context) : IHealthAdviceSe
 
             for (int i = 0; i < randomAdvice.Count; i++)
             {
-                randomAdvice[i].Img = $"Health{i + 1}";
+                randomAdvice[i].Img = $"health{i + 1}";
             }
 
             response.Data = randomAdvice;

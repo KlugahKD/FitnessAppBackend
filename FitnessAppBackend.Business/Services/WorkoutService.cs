@@ -122,10 +122,9 @@ public class WorkoutService(ApplicationDbContext context, ILogger<WorkoutService
     {
         try
         {
-            var today = DateTime.UtcNow.Date;
-    
+            
             var pastWorkouts = await context.Exercises
-                .Where(e => e.UserId == userId && e.Date.Date < today)
+                .Where(e => e.UserId == userId && (e.IsCompleted || e.IsMissed))
                 .OrderByDescending(e => e.Date)
                 .Take(5)
                 .ToListAsync();
